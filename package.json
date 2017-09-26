@@ -1,15 +1,15 @@
 {
-  "name": "codes",
+  "name": "BananaServer",
   "version": "1.0.0",
   "description": "The server for Banana-HCM's traffic information IOS app",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DiFilosofa/bananaserver.git"
+    "url": "https://github.com/DiFilosofa/bananaserver.git"
   },
   "keywords": [],
   "author": "TQN",
@@ -22,6 +22,8 @@
     "nodemon": "^1.12.1"
   },
   "dependencies": {
-    "express": "^4.15.4"
+    "body-parser": "^1.18.2",
+    "express": "^4.15.4",
+    "mongoose": "^4.11.13"
   }
 }
