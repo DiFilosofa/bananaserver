@@ -21,7 +21,7 @@
   "devDependencies": {
     "nodemon": "^1.12.1"
   },
-  "dependencies": {c
+  "dependencies": {
     "body-parser": "^1.18.2",
     "express": "^4.15.4",
     "mongodb": "^2.2.31"

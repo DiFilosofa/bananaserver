@@ -16,7 +16,3 @@ app.get('/', function (req, res) {
 app.get('/test', function (req, res) {
     res.status(200).send('testID');
 })
-
-
-mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://banana_admin:mrtiken@ds147864.mlab.com:47864/bananaserver');
