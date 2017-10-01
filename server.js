@@ -1,18 +1,33 @@
 var express = require('express');
 var app = express();
 var database = require('mongodb');
+var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var API_CONSTANT = "gYqqZQHORiIrJewS";
 var dbUrl = process.env.BANANA_DB_URL;
 var mongoClient = database.MongoClient;
+var routes = require('./api/routes/bananaRoutes.js');
+var User = require('./api/models/User.js');
+var configDB = require('./config/database.js');
 
-var server = app.listen(process.env.PORT || 8080, function () {
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+routes(app);
+
+mongoose.Promise = global.Promise;
+mongoose.connect(configDB.url);
+
+// connect to our database// mongoose.connect('mongodb://localhost/bananaserver');
+
+var server = app.listen(process.env.PORT || 3500, function () {
     var port = server.address().port;
     console.log("App now running on port", port);
 });
-app.get('/', function (req, res) {
-    res.status(200).send('WELCOME TO BANANA');
-})
-app.get('/test', function (req, res) {
-    res.status(200).send('testID');
-})
+//
+// app.get('/', function (req, res) {
+//     res.status(200).send('WELCOME TO BANANA');
+// });
+// app.get('/test', function (req, res) {
+//     res.status(200).send('testID');
+// });
