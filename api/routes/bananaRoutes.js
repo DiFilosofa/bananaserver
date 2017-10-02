@@ -2,6 +2,10 @@
 module.exports = function(app) {
     var users = require('../controller/bananaController');
 
+    app.route('/').get(function (req,res) {
+        res.send("Server is up and running")
+        });
+
     // Account
     app.route('/user')
         .get(users.getAllUser)
