@@ -11,7 +11,11 @@ const
     msgNoPassword = "Please enter your password",
     msgNoConfirmPassword = "Please enter your password confirmation",
     msgPasswordNotMatch = "Passwords do not match",
+    msgNoOldPassword = "Please enter your old password",
+    msgNoNewPassword = "Please enter your new password",
+    msgIncorrectOldPassword = "The old password is incorrect",
     msgEmailExist = "This email has been taken",
+    msgUserNotFound = "User not found",
     msgNoAccount = "Email or password is wrong"
 ;
 
@@ -68,41 +72,96 @@ exports.createUser = function(req, res) {
 };
 
 exports.getUserById = function(req, res) {
-    User.findById(req.params.userId, function(err, user) {
-        if (err)
+    User.findOne({
+        _id:req.params.userId
+    }, function (err,userExist) {
+        if(!userExist) {
+            return result(res, codeNotFound, msgUserNotFound, null);
+        }
+        if(err) {
+            console.log(err);
             return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, user);
+        }
+        return result(res, codeSuccess, msgSuccess, userExist);
     });
 };
 
 exports.updateById = function(req, res) {
-    User.findOne({_id: req.params.userId}
-        , function(err, userExist) {
-        if (err)
+    var body = req.body;
+    User.findByIdAndUpdate(req.params.userId, body,{new: true}, function (err, user) {
+        if(!user)
+            return result(res, codeNotFound, msgUserNotFound, null);
+        if(err)
             return result(res, codeServerError, msgServerError, null);
-        User.insert()
         return result(res, codeSuccess, msgSuccess, user);
     });
 };
 
 exports.deleteUserById = function(req, res) {
-    User.remove({
-        _id: req.params.userId
-    }, function(err, user) {
-        if (err)
+    User.findOne({
+        _id:req.params.userId
+    }, function (err,userExist) {
+        if(err) {
             return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, user);
+        }
+        if(userExist) {
+            User.remove({
+                _id:req.params.userId
+            }, function (err, deleted) {
+                if(!deleted){
+                    return result(res, codeNotFound, msgUserNotFound, null);
+                }
+                if(err) {
+                    return result(res, codeServerError, msgServerError, null);
+                }
+                if(deleted){
+                    return result(res, codeSuccess, msgSuccess, null);
+                }
+            });
+        }
+        else{
+            return result(res, codeNotFound, msgUserNotFound, null);
+        }
     });
 };
 
 exports.updatePassword = function (req, res) {
-    User.findOneAndUpdate({_id: req.params.userId}, req.body, {new: true}, function(err, user) {
-        if (err)
+    User.findOne({
+        _id:req.params.userId
+    }, function (err,userExist) {
+        if(!userExist) {
+            return result(res, codeNotFound, msgUserNotFound, null);
+        }
+        if(err) {
+            console.log(err);
             return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, user);
+        }
+        var body = req.body;
+        if(!body.password)
+            return result(res, codeBadRequest, msgNoOldPassword, null);
+        if(!body.newPassword)
+            return result(res, codeBadRequest, msgNoNewPassword, null);
+        if(!body.confirmPassword)
+            return result(res, codeBadRequest, msgNoConfirmPassword, null);
+        if(userExist.password !== body.password)
+            return result(res, codeBadRequest, msgIncorrectOldPassword, null);
+        if(body.newPassword !== body.confirmPassword)
+            return result(res, codeBadRequest, msgPasswordNotMatch, null);
+        userExist.update({
+            password:body.newPassword,
+            confirmPassword:body.confirmPassword
+        },{new:true},function (err,user) {
+            if(err)
+                return result(res, codeServerError, msgServerError, null);
+            /////////////////////////////////////
+            userExist.password = body.newPassword;
+            userExist.confirmPassword = body.confirmPassword;
+            ////////////////////////////////////
+            return result(res, codeSuccess, msgSuccess, userExist);
+        });
     });
 
-}
+};
 
 exports.login = function (req, res) {
     var body = res.body;
