@@ -2,7 +2,8 @@
 var express = require('express');
 var jwt = require('jsonwebtoken');
 module.exports = function(app) {
-    var users = require('./UserController');
+    var users = require('./User/UserController');
+    var events = require('./TrafficEvent/Main/TrafficEventController');
     var apiRoutes  = express.Router();
     apiRoutes.get('/',function (req,res) {
         res.send("Server is up and running")
@@ -28,7 +29,6 @@ module.exports = function(app) {
                     next();
                 }
             });
-
         } else {
             // if there is no token
             // return an error
@@ -45,6 +45,12 @@ module.exports = function(app) {
     apiRoutes.get('/user/:userId',users.getUserById);
     apiRoutes.put('/user/:userId',users.updateById);
     apiRoutes.delete('/user/:userId',users.deleteUserById);
+
+    apiRoutes.post('/events',events.create);
+    apiRoutes.get('/events',events.getAllEvents);
+    apiRoutes.get('/events/:eventId',events.getEventById);
+    apiRoutes.put('/events/:eventId',events.updateEventById);
+    apiRoutes.delete('/events/:eventId',events.deleteEvent);
 
     app.use(apiRoutes);
 };

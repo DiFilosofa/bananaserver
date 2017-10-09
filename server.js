@@ -7,7 +7,7 @@ var API_CONSTANT = "gYqqZQHORiIrJewS";
 var dbUrl = process.env.BANANA_DB_URL;
 var mongoClient = database.MongoClient;
 
-var userRoutes = require('./api/User/UserRoutes.js');
+var userRoutes = require('./api/Routes.js');
 var trafficEventRoutes = require('./api/TrafficEvent/Main/TrafficEventRoutes.js');
 var GPSDataRoutes = require('./api/GPSData/GPSDataRoutes.js');
 
