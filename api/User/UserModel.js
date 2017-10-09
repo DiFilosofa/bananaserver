@@ -33,10 +33,6 @@ var userSchema = new Schema({
         min:-2,
         max:5
     },
-    points:{
-        type:Number,
-        default:0
-    },
     created_at:{
         type:Date,
         default: Date.now

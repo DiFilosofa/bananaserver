@@ -1,7 +1,6 @@
 'use strict';
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
-    jwt = require('jsonwebtoken'),
     passwordHash = require('password-hash');
 const
     codeServerError = 500,

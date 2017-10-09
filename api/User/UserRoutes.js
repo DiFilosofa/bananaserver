@@ -2,9 +2,9 @@
 var express = require('express');
 var jwt = require('jsonwebtoken');
 module.exports = function(app) {
-    var users = require('../controller/bananaController');
+    var users = require('./UserController');
     var apiRoutes  = express.Router();
-    app.route('/').get(function (req,res) {
+    apiRoutes.get('/',function (req,res) {
         res.send("Server is up and running")
         });
 
