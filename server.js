@@ -8,10 +8,12 @@ var dbUrl = process.env.BANANA_DB_URL;
 var mongoClient = database.MongoClient;
 var routes = require('./api/routes/bananaRoutes.js');
 var User = require('./api/models/User.js');
-var configDB = require('./config/database.js');
+var configDB = require('./config/BananaConst.js');
+var jwt = require('jsonwebtoken');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.set('bananaMinion', configDB.secret); // secret variable
 
 routes(app);
 

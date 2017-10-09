@@ -1,6 +1,8 @@
 'use strict';
 var mongoose = require('mongoose'),
-    User = mongoose.model('User');
+    User = mongoose.model('User'),
+    jwt = require('jsonwebtoken'),
+    passwordHash = require('password-hash');
 const
     codeServerError = 500,
     codeBadRequest = 400,
@@ -16,7 +18,9 @@ const
     msgIncorrectOldPassword = "The old password is incorrect",
     msgEmailExist = "This email has been taken",
     msgUserNotFound = "User not found",
-    msgNoAccount = "Email or password is wrong"
+    msgWrongEmail = "Email not found",
+    msgWrongPassword = "Password is incorrect"
+    ;
 ;
 
 const
@@ -30,7 +34,13 @@ exports.getAllUser = function(req, res) {
     User.find({}, function(err, user) {
         if (err)
             return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, user)
+        return result(res, codeSuccess, msgSuccess, ({
+            email:user.email,
+            nickname:user.nickname,
+            address:user.address,
+            phone:user.phone,
+            created_at:user.created_at
+        }))
     });
 };
 
@@ -57,13 +67,26 @@ exports.createUser = function(req, res) {
                 return result(res, codeBadRequest, msgEmailExist, null);
             }
             else{
+                newUser.password = passwordHash.generate(newUser.password);
+                newUser.confirmPassword = passwordHash.generate(newUser.confirmPassword);
+
+                console.log(newUser.password);
+                console.log(newUser.confirmPassword);
+
                 newUser.save(function(err, user) {
                     if (err) {
                         console.log(err);
                         return result(res, codeServerError, msgServerError, null)
                     }
                     else {
-                        return result(res, codeSuccess, msgAccountCreated, user)
+                        return result(res, codeSuccess, msgAccountCreated, ({
+                            _id:user._id,
+                            email:user.email,
+                            nickname:user.nickname,
+                            address:user.address,
+                            phone:user.phone,
+                            created_at:user.created_at
+                        }))
                     }
                 });
             }
@@ -82,7 +105,14 @@ exports.getUserById = function(req, res) {
             console.log(err);
             return result(res, codeServerError, msgServerError, null);
         }
-        return result(res, codeSuccess, msgSuccess, userExist);
+        return result(res, codeSuccess, msgSuccess, ({
+            _id:userExist._id,
+            email:userExist.email,
+            nickname:userExist.nickname,
+            address:userExist.address,
+            phone:userExist.phone,
+            created_at:userExist.created_at
+        }));
     });
 };
 
@@ -93,7 +123,14 @@ exports.updateById = function(req, res) {
             return result(res, codeNotFound, msgUserNotFound, null);
         if(err)
             return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, user);
+        return result(res, codeSuccess, msgSuccess, ({
+            _id:user._id,
+            email:user.email,
+            nickname:user.nickname,
+            address:user.address,
+            phone:user.phone,
+            created_at:user.created_at
+        }));
     });
 };
 
@@ -115,7 +152,7 @@ exports.deleteUserById = function(req, res) {
                     return result(res, codeServerError, msgServerError, null);
                 }
                 if(deleted){
-                    return result(res, codeSuccess, msgSuccess, null);
+                    return result(res, codeSuccess, msgSuccess, ({}));
                 }
             });
         }
@@ -153,55 +190,90 @@ exports.updatePassword = function (req, res) {
         },{new:true},function (err,user) {
             if(err)
                 return result(res, codeServerError, msgServerError, null);
-            /////////////////////////////////////
-            userExist.password = body.newPassword;
-            userExist.confirmPassword = body.confirmPassword;
-            ////////////////////////////////////
-            return result(res, codeSuccess, msgSuccess, userExist);
+
+            userExist.password = passwordHash.generate(body.newPassword);
+            userExist.confirmPassword = passwordHash.generate(body.confirmPassword);
+
+            return result(res, codeSuccess, msgSuccess, ({
+                _id:user._id,
+                email:user.email,
+                nickname:user.nickname,
+                address:user.address,
+                phone:user.phone,
+                created_at:user.created_at
+            }));
         });
     });
 
 };
 
 exports.login = function (req, res) {
-    var body = res.body;
+    console.log(req.body);
+    var body = req.body;
     if(!body.email){
         return result(res, codeBadRequest, msgNoEmail, null);
     }
     if(!body.password){
         return result(res, codeBadRequest, msgNoPassword, null);
     }
+
     User.findOne(
         {
-            'email':body.email,
-            'password':body.password
+            email:body.email
         }
         ,function(err,accountExist){
+            if(err) {
+                return result(res, codeServerError, msgServerError, null);
+            }
             if(accountExist) { // user exists
-                return result(res, codeSuccess, msgSuccess, new res.json({
+                if(!passwordHash.verify(body.password,accountExist.password)) //checkPassword
+                    return result(res, codeNotFound, msgWrongPassword, null);
+                const payload = {
+                    _id:accountExist._id,
+                    nickname: accountExist.nickname,
+                    email:accountExist.email,
+                    phone: accountExist.phone,
+                    address: accountExist.address
+                };
+                //generate tokens
+                var tokenResponse = jwt.sign(payload, "minionAndGru", {
+                    expiresIn: 4320 // expires in 72 hours
+                });
+                return resultWithToken(res,tokenResponse, {
+                    _id:accountExist._id,
                     nickname: accountExist.nickname,
                     phone: accountExist.phone,
-                    address: accountExist.address,
-                    token: "temp"
-                }));
+                    address: accountExist.address
+                });
             }
             else{
-                return result(res, codeNotFound, msgNoAccount, null);
+                return result(res, codeNotFound, msgWrongEmail, null);
             }
         }
     );
 };
 
 function result(res, code, message, body){
+    var isSuccess = code == codeSuccess;
     if(!body){
         return res.json({
+            success:isSuccess,
             code : code,
             message : message
         })
     }
     return res.json({
+        success:isSuccess,
         code : code,
         message : message,
         body: body
+    })
+}
+function resultWithToken(res,token,body){
+    return res.json({
+        success:true,
+        message: msgSuccess,
+        token: token,
+        data: body
     })
 }
