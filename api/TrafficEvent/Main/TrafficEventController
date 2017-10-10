@@ -12,7 +12,8 @@ const
     userIdNotFound = "Please enter your user Id",
     latitudeNotFound = "Please enter latitude of the event",
     longitudeNotFound = "Please enter longitude of the event",
-    estimateLengthNotFound = "Please enter estimate length",
+    endLatitudeNotFound = "Please enter the end_latitude of the event",
+    endLongitudeNotFound = "Please enter the end_longitude of the event",
     eventNotFound = "Event not found",
     noUpdateUserId = "Can't update user Id",
     invalidEventType = "eventType is invalid",
@@ -36,8 +37,11 @@ exports.createEvent = function (req,res) {
     if(!body.longitude){
         return result(res,codeBadRequest,longitudeNotFound,null);
     }
-    if(!body.estimateLength){
-        return result(res,codeBadRequest,estimateLengthNotFound,null)
+    if(!body.end_latitude){
+        return result(res,codeBadRequest,endLatitudeNotFound,null);
+    }
+    if(!body.end_longitude){
+        return result(res,codeBadRequest,endLongitudeNotFound,null);
     }
     if(body.eventType && (body.eventType > 4 || body.eventType < 0)){
         return result(res,codeBadRequest,invalidEventType,null);

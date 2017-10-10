@@ -29,7 +29,11 @@ var trafficEventSchema = new Schema({
         type:Number,
         required:true
     },
-    estimateLength:{
+    end_latitude:{
+        type:Number,
+        required:true
+    },
+    end_longitude:{
         type:Number,
         required:true
     },
