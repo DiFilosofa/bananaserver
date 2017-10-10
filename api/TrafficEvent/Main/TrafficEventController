@@ -68,10 +68,10 @@ exports.createEvent = function (req,res) {
                 return result(res, codeServerError, msgServerError, null);
             }
             else {
-                if(EventPoint.createEventPoint(event._id))
+                // if(EventPoint.createEventPoint(event._id))
                     return result(res, codeSuccess, msgSuccess,event);
-                else
-                    return result(res,codeServerError,msgServerError,null);
+                // else
+                //     return result(res,codeServerError,msgServerError,null);
             }
         });
     });
