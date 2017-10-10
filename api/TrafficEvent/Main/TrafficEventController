@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
     Event = mongoose.model('TrafficEvent'),
+    User = mongoose.model('User'),
     EventPoint = require('./Points/TrafficEventPointController');
 
 const
@@ -56,8 +57,8 @@ exports.createEvent = function (req,res) {
         return result(res,codeBadRequest,invalidCarSpeed,null);
     }
     var newEvent = Event(body);
-    Event.findOne({
-        userId:body.userId
+    User.findOne({
+        _id:body.userId
     },function (err,userExist) {
         if(!userExist){
             return result(res,codeNotFound,userNotFound,null);
