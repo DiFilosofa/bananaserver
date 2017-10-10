@@ -12,6 +12,8 @@ module.exports = function(app) {
     // Account
     apiRoutes.post('/user',users.createUser);
     apiRoutes.post('/user/login',users.login);
+    apiRoutes.get('/events',events.getAllEvents);
+    apiRoutes.get('/events/:eventId',events.getEventById);
 
     apiRoutes.use(function (req,res,next) {
         // check header or url parameters or post parameters for token
@@ -47,8 +49,6 @@ module.exports = function(app) {
     apiRoutes.delete('/user/:userId',users.deleteUserById);
 
     apiRoutes.post('/events',events.createEvent);
-    apiRoutes.get('/events',events.getAllEvents);
-    apiRoutes.get('/events/:eventId',events.getEventById);
     apiRoutes.put('/events/:eventId',events.updateEventById);
     apiRoutes.delete('/events/:eventId',events.deleteEvent);
 
