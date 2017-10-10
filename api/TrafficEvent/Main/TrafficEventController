@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
-    Event = mongoose.model('TrafficEvent');
+    Event = mongoose.model('TrafficEvent'),
+    EventPoint = require('./Points/TrafficEventPointController');
 
 const
     codeServerError = 500,
@@ -67,7 +68,10 @@ exports.createEvent = function (req,res) {
                 return result(res, codeServerError, msgServerError, null);
             }
             else {
-                return result(res, codeSuccess, msgSuccess,event);
+                if(EventPoint.createEventPoint(event._id))
+                    return result(res, codeSuccess, msgSuccess,event);
+                else
+                    return result(res,codeServerError,msgServerError,null);
             }
         });
     });
