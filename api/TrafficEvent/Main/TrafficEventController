@@ -1,0 +1,178 @@
+var mongoose = require('mongoose'),
+    Event = mongoose.model('TrafficEvent'),
+    EventPoint = require('./Points/TrafficEventPointController');
+
+const
+    codeServerError = 500,
+    codeBadRequest = 400,
+    codeNotFound = 401,
+
+    msgServerError = "Server Internal Error",
+    userNotFound = "User doesn't exist",
+    userIdNotFound = "Please enter your user Id",
+    latitudeNotFound = "Please enter latitude of the event",
+    longitudeNotFound = "Please enter longitude of the event",
+    estimateLengthNotFound = "Please enter estimate length",
+    eventNotFound = "Event not found",
+    noUpdateUserId = "Can't update user Id",
+    invalidEventType = "eventType is invalid",
+    invalidDensity = "density is invalid",
+    invalidCarSpeed = "car_speed is invalid",
+    invalidMotorbikeSpeed = "motorbike_speed is invalid"
+    ;
+const
+    codeSuccess = 200,
+    msgSuccess = "Success"
+;
+
+exports.createEvent = function (req,res) {
+    var body = req.body;
+    if(!body.userId){
+        return result(res,codeBadRequest,userIdNotFound,null);
+    }
+    if(!body.latitude){
+        return result(res,codeBadRequest,latitudeNotFound,null);
+    }
+    if(!body.longitude){
+        return result(res,codeBadRequest,longitudeNotFound,null);
+    }
+    if(!body.estimateLength){
+        return result(res,codeBadRequest,estimateLengthNotFound,null)
+    }
+    if(body.eventType && (body.eventType > 4 || body.eventType < 0)){
+        return result(res,codeBadRequest,invalidEventType,null);
+    }
+    if(body.density && (body.density < 0 || body.density >4)){
+        return result(res,codeBadRequest,invalidDensity,null);
+    }
+    if(body.motorbike_speed && (body.motorbike_speed <0 || body.motorbike_speed > 3)){
+        return result(res,codeBadRequest,invalidMotorbikeSpeed,null);
+    }
+    if(body.car_speed && (body.car_speed <0 || body.car_speed > 3)){
+        return result(res,codeBadRequest,invalidCarSpeed,null);
+    }
+    var newEvent = Event(body);
+    Event.findOne({
+        userId:body.userId
+    },function (err,userExist) {
+        if(!userExist){
+            return result(res,codeNotFound,userNotFound,null);
+        }
+        if(err){
+            console.log(err);
+            return result(res, codeServerError, msgServerError, null);
+        }
+        newEvent.save(function (err,event) {
+            if(err){
+                console.log(err);
+                return result(res, codeServerError, msgServerError, null);
+            }
+            else {
+                if(EventPoint.createEventPoint(event._id))
+                    return result(res, codeSuccess, msgSuccess,event);
+                else
+                    return result(res,codeServerError,msgServerError,null);
+            }
+        });
+    });
+
+};
+
+exports.getAllEvents = function (req,res) {
+    Event.find({}, function (err,allEvents) {
+        if(err){
+            return result(res, codeServerError, msgServerError,null);
+        }
+        return result(res,codeSuccess,msgSuccess,allEvents)
+    })
+};
+
+exports.getEventById = function (req,res) {
+    console.log(req.params.eventId);
+    Event.findOne({
+       _id:req.params.eventId
+    }, function (err,eventExist) {
+        if(!eventExist){
+            return result(res,codeNotFound,eventNotFound,null);
+        }
+        if(err){
+            console.log(err);
+            return result(res, codeServerError, msgServerError, null);
+        }
+        return result(res,codeSuccess,msgSuccess,eventExist);
+    });
+};
+
+exports.updateEventById = function (req,res) {
+    var body = req.body;
+    if(req.body._id){
+        return result(res,codeBadRequest,noUpdateUserId,null);
+    }
+    if(body.eventType && (body.eventType > 4 || body.eventType < 0)){
+        return result(res,codeBadRequest,invalidEventType,null);
+    }
+    if(body.density && (body.density < 0 || body.density >4)){
+        return result(res,codeBadRequest,invalidDensity,null);
+    }
+    if(body.motorbike_speed && (body.motorbike_speed <0 || body.motorbike_speed > 3)){
+        return result(res,codeBadRequest,invalidMotorbikeSpeed,null);
+    }
+    if(body.car_speed && (body.car_speed <0 || body.car_speed > 3)){
+        return result(res,codeBadRequest,invalidCarSpeed,null);
+    }
+
+    Event.findByIdAndUpdate(req.params.eventId, body,{new: true}, function (err, event) {
+        if(!event)
+            return result(res, codeNotFound, eventNotFound, null);
+        if(err)
+            return result(res, codeServerError, msgServerError, null);
+        return result(res, codeSuccess, msgSuccess, event);
+    });
+};
+
+exports.deleteEvent = function (req,res) {
+    Event.findOne({
+        _id:req.params.eventId
+    }, function (err,eventExist) {
+        if(err) {
+            return result(res, codeServerError, msgServerError, null);
+        }
+        if(eventExist) {
+            Event.remove({
+                _id:req.params.eventId
+            }, function (err, deleted) {
+                if(!deleted){
+                    return result(res, codeNotFound, eventNotFound, null);
+                }
+                if(err) {
+                    return result(res, codeServerError, msgServerError, null);
+                }
+                if(deleted){
+                    return result(res, codeSuccess, msgSuccess, null);
+                }
+            });
+        }
+        else{
+            return result(res, codeNotFound, eventNotFound, null);
+        }
+    });
+};
+
+
+
+function result(res, code, message, body){
+    var isSuccess = code == codeSuccess;
+    if(!body){
+        return res.json({
+            success:isSuccess,
+            code : code,
+            message : message
+        })
+    }
+    return res.json({
+        success:isSuccess,
+        code : code,
+        message : message,
+        body: body
+    })
+}

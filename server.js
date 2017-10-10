@@ -6,8 +6,14 @@ var bodyParser = require('body-parser');
 var API_CONSTANT = "gYqqZQHORiIrJewS";
 var dbUrl = process.env.BANANA_DB_URL;
 var mongoClient = database.MongoClient;
-var routes = require('./api/routes/bananaRoutes.js');
-var User = require('./api/models/User.js');
+
+var routes = require('./api/Routes.js');
+
+var User = require('./api/User/UserModel.js');
+var TrafficEvent  = require('./api/TrafficEvent/Main/TrafficEventModel.js');
+var GPSData = require('./api/GPSData/GPSDataModel.js');
+var TrafficEventPoint = require('./api/TrafficEvent/Main/Points/TrafficEventPointModel.js');
+
 var configDB = require('./config/BananaConst.js');
 var jwt = require('jsonwebtoken');
 
