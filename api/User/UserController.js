@@ -1,7 +1,8 @@
 'use strict';
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
-    passwordHash = require('password-hash');
+    passwordHash = require('password-hash'),
+    jwt = require('jsonwebtoken');
 const
     codeServerError = 500,
     codeBadRequest = 400,
@@ -20,11 +21,9 @@ const
     msgWrongEmail = "Email not found",
     msgWrongPassword = "Password is incorrect"
     ;
-;
 
 const
     codeSuccess = 200,
-
     msgSuccess = "Success",
     msgAccountCreated = "Account successfully created"
 ;

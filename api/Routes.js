@@ -46,7 +46,7 @@ module.exports = function(app) {
     apiRoutes.put('/user/:userId',users.updateById);
     apiRoutes.delete('/user/:userId',users.deleteUserById);
 
-    apiRoutes.post('/events',events.create);
+    apiRoutes.post('/events',events.createEvent);
     apiRoutes.get('/events',events.getAllEvents);
     apiRoutes.get('/events/:eventId',events.getEventById);
     apiRoutes.put('/events/:eventId',events.updateEventById);

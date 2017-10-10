@@ -7,9 +7,7 @@ var API_CONSTANT = "gYqqZQHORiIrJewS";
 var dbUrl = process.env.BANANA_DB_URL;
 var mongoClient = database.MongoClient;
 
-var userRoutes = require('./api/Routes.js');
-var trafficEventRoutes = require('./api/TrafficEvent/Main/TrafficEventRoutes.js');
-var GPSDataRoutes = require('./api/GPSData/GPSDataRoutes.js');
+var routes = require('./api/Routes.js');
 
 var User = require('./api/User/UserModel.js');
 var TrafficEvent  = require('./api/TrafficEvent/Main/TrafficEventModel.js');
@@ -22,8 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.set('bananaMinion', configDB.secret); // secret variable
 
-userRoutes(app);
-trafficEventRoutes(app);
+routes(app);
 
 mongoose.Promise = global.Promise;
 mongoose.connect(configDB.url);
