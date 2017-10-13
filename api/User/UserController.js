@@ -237,7 +237,8 @@ exports.login = function (req, res) {
                 var tokenResponse = jwt.sign(payload, "minionAndGru", {
                     expiresIn: 4320 // expires in 72 hours
                 });
-                return resultWithToken(res,tokenResponse, {
+                return result(res,codeSuccess,msgSuccess, {
+                    token:tokenResponse,
                     _id:accountExist._id,
                     nickname: accountExist.nickname,
                     phone: accountExist.phone,
