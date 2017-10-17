@@ -15,16 +15,22 @@ module.exports = function(app) {
     apiRoutes.get('/events',events.getAllEvents);
     apiRoutes.get('/events/:eventId',events.getEventById);
 
-    apiRoutes.use(function (req,res,next) {
+    apiRoutes.use(function (err,req,res,next) {
+        if(err.status == 404){
+            res.status(404);
+            return res.send("Bad Gateway!");
+        }
         // check header or url parameters or post parameters for token
         var token =  req.headers['authorization'];
-        console.log(req.headers);
+        //console.log(req.headers);
         // decode token
         if (token) {
             // verifies secret and checks exp
             jwt.verify(token, app.get('bananaMinion'), function(err, decoded) {
                 if (err) {
+                    console.log("err",err);
                     return res.json({ success: false, message: 'Token expired' });
+
                 } else {
                     // if everything is good, save to request for use in other routes
                     req.decoded = decoded;
@@ -34,6 +40,8 @@ module.exports = function(app) {
         } else {
             // if there is no token
             // return an error
+            console.log("err",err);
+
             return res.status(403).send({
                 success: false,
                 message: 'No token provided.'

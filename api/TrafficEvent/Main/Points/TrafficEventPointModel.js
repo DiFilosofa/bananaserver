@@ -7,6 +7,9 @@ var trafficPointsSchema = new Schema({
         type:String,
         required: true
     },
+    user_id:{
+        type:String
+    },
     isVerified:{
         type:Boolean,
         default:false
