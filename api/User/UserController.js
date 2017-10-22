@@ -1,6 +1,7 @@
 'use strict';
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
+    Point = mongoose.model('PointByMonth'),
     passwordHash = require('password-hash'),
     jwt = require('jsonwebtoken');
 const
@@ -68,22 +69,29 @@ exports.createUser = function(req, res) {
                 newUser.password = passwordHash.generate(newUser.password);
                 newUser.confirmPassword = passwordHash.generate(newUser.confirmPassword);
 
-                console.log(newUser.password);
-                console.log(newUser.confirmPassword);
-
                 newUser.save(function(err, user) {
                     if (err) {
                         console.log(err);
                         return result(res, codeServerError, msgServerError, null)
                     }
                     else {
+                        var point = new Point({
+                            userId:user._id,
+                        });
+                        point.save(function(err){
+                            if (err) {
+                                console.log(err);
+                                return result(res, codeServerError, msgServerError, null)
+                            }
+                        });
                         return result(res, codeSuccess, msgAccountCreated, ({
                             _id:user._id,
                             email:user.email,
                             nickname:user.nickname,
                             address:user.address,
                             phone:user.phone,
-                            created_at:user.created_at
+                            created_at:user.created_at,
+                            Point:point
                         }))
                     }
                 });
@@ -103,14 +111,26 @@ exports.getUserById = function(req, res) {
             console.log(err);
             return result(res, codeServerError, msgServerError, null);
         }
-        return result(res, codeSuccess, msgSuccess, ({
-            _id:userExist._id,
-            email:userExist.email,
-            nickname:userExist.nickname,
-            address:userExist.address,
-            phone:userExist.phone,
-            created_at:userExist.created_at
-        }));
+        Point.find({userId:userExist._id},
+            function (err,pointResult) {
+                if(err) {
+                    console.log(err);
+                    return result(res, codeServerError, msgServerError, null);
+                }
+                else {
+                    return result(res, codeSuccess, msgSuccess, ({
+                        _id:userExist._id,
+                        email:userExist.email,
+                        nickname:userExist.nickname,
+                        address:userExist.address,
+                        phone:userExist.phone,
+                        created_at:userExist.created_at,
+                        Point:pointResult
+                    }));
+                }
+            }
+        );
+
     });
 };
 
