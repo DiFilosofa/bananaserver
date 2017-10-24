@@ -238,7 +238,7 @@ exports.login = function (req, res) {
                 };
                 //generate tokens
                 var tokenResponse = jwt.sign(payload, "minionAndGru", {
-                    expiresIn: 4320 // expires in 72 hours
+                    expiresIn: "3d" // expires in 3days
                 });
                 return utils.result(res,code.success,msg.success, {
                     token:tokenResponse,
