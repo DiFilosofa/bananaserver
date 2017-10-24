@@ -7,9 +7,13 @@ var pointSchema = new Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:'User'
     },
-    created_at:{
-        type:Date,
-        default:Date.now
+    month:{
+        type:Number,
+        required:true
+    },
+    year:{
+        type:Number,
+        required:true
     },
     point:{
         type:Number,
