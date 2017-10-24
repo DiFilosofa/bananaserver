@@ -23,3 +23,4 @@ exports.invalidDensity = "density is invalid";
 exports.invalidCarSpeed = "car_speed is invalid";
 exports.invalidMotorbikeSpeed = "motorbike_speed is invalid";
 exports.accountCreated = "Account successfully created";
+exports.nameNotFound ="Please enter event's name";

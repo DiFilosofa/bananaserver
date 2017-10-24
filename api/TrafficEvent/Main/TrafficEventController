@@ -15,6 +15,9 @@ exports.createEvent = function (req,res) {
     if(!body.userId){
         return utils.result(res,code.badRequest,msg.userNotFound,null);
     }
+    if(!body.name){
+        return utils.result(res,code.badRequest,msg.nameNotFound,null)
+    }
     if(!body.latitude){
         return utils.result(res,code.badRequest,msg.latitudeNotFound,null);
     }
