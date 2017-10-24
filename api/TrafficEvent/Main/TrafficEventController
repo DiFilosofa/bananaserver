@@ -78,25 +78,18 @@ exports.createEvent = function (req,res) {
                 console.log(err);
                 return utils.result(res, codeServerError, msgServerError, null);
             }
-            else {
-                var eventPoint = new EventPoint({
-                    event_id:event._id
-                });
-                eventPoint.save(function (err,point) {
-                    if(err){
-                        console.log(err);
-                        return utils.result(res,codeServerError,msgServerError,null);
-                    }
-                    var body=({
-                       Event:event,
-                       EventPoint:point
-                    });
-                    return utils.result(res, codeSuccess, msgSuccess,body);
-                });
-            }
+            var eventPoint = new EventPoint({
+                event_id:event._id
+            });
+            eventPoint.save(function (err) {
+                if(err){
+                    console.log(err);
+                    return utils.result(res,codeServerError,msgServerError,null);
+                }
+                return utils.result(res, codeSuccess, msgSuccess,event);
+            });
         });
     });
-
 };
 
 exports.getAllEvents = function (req,res) {
