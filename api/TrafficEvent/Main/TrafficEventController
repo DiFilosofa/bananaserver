@@ -9,74 +9,51 @@ var mongoose = require('mongoose'),
     EventPoint = mongoose.model('TrafficEventPoint'),
     UserPoint = mongoose.model('PointByMonth')
 ;
-const
-    codeServerError = 500,
-    codeBadRequest = 400,
-    codeNotFound = 401,
-
-    msgServerError = "Server Internal Error",
-    userNotFound = "User doesn't exist",
-    userIdNotFound = "Please enter your user Id",
-    latitudeNotFound = "Please enter latitude of the event",
-    longitudeNotFound = "Please enter longitude of the event",
-    endLatitudeNotFound = "Please enter the end_latitude of the event",
-    endLongitudeNotFound = "Please enter the end_longitude of the event",
-    eventNotFound = "Event not found",
-    noUpdateUserId = "Can't update user Id",
-    invalidEventType = "eventType is invalid",
-    invalidDensity = "density is invalid",
-    invalidCarSpeed = "car_speed is invalid",
-    invalidMotorbikeSpeed = "motorbike_speed is invalid"
-    ;
-const
-    codeSuccess = 200,
-    msgSuccess = "Success"
-;
 
 exports.createEvent = function (req,res) {
     var body = req.body;
     if(!body.userId){
-        return utils.result(res,codeBadRequest,userIdNotFound,null);
+        return utils.result(res,code.badRequest,msg.userNotFound,null);
     }
     if(!body.latitude){
-        return utils.result(res,codeBadRequest,latitudeNotFound,null);
+        return utils.result(res,code.badRequest,msg.latitudeNotFound,null);
     }
     if(!body.longitude){
-        return utils.result(res,codeBadRequest,longitudeNotFound,null);
+        return utils.result(res,code.badRequest,msg.longitudeNotFound,null);
     }
     if(!body.end_latitude){
-        return utils.result(res,codeBadRequest,endLatitudeNotFound,null);
+        return utils.result(res,code.badRequest,msg.endLatitudeNotFound,null);
     }
     if(!body.end_longitude){
-        return utils.result(res,codeBadRequest,endLongitudeNotFound,null);
+        return utils.result(res,code.badRequest,msg.endLongitudeNotFound,null);
     }
     if(body.eventType && (body.eventType > 4 || body.eventType < 0)){
-        return utils.result(res,codeBadRequest,invalidEventType,null);
+        return utils.result(res,code.badRequest,msg.invalidEventType,null);
     }
     if(body.density && (body.density < 0 || body.density >4)){
-        return utils.result(res,codeBadRequest,invalidDensity,null);
+        return utils.result(res,code.badRequest,msg.invalidDensity,null);
     }
     if(body.motorbike_speed && (body.motorbike_speed <0 || body.motorbike_speed > 3)){
-        return utils.result(res,codeBadRequest,invalidMotorbikeSpeed,null);
+        return utils.result(res,code.badRequest,msg.invalidMotorbikeSpeed,null);
     }
     if(body.car_speed && (body.car_speed <0 || body.car_speed > 3)){
-        return utils.result(res,codeBadRequest,invalidCarSpeed,null);
+        return utils.result(res,code.badRequest,msg.invalidCarSpeed,null);
     }
     var newEvent = Event(body);
     User.findOne({
         _id:body.userId
     },function (err,userExist) {
         if(!userExist){
-            return utils.result(res,codeNotFound,userNotFound,null);
+            return utils.result(res,code.notFound,msg.userNotFound,null);
         }
         if(err){
             console.log(err);
-            return utils.result(res, codeServerError, msgServerError, null);
+            return utils.result(res, code.serverError, msg.serverError, null);
         }
         newEvent.save(function (err,event) {
             if(err){
                 console.log(err);
-                return utils.result(res, codeServerError, msgServerError, null);
+                return utils.result(res, code.serverError, msg.serverError, null);
             }
             var eventPoint = new EventPoint({
                 event_id:event._id
@@ -84,62 +61,83 @@ exports.createEvent = function (req,res) {
             eventPoint.save(function (err) {
                 if(err){
                     console.log(err);
-                    return utils.result(res,codeServerError,msgServerError,null);
+                    return utils.result(res,code.serverError,msg.serverError,null);
                 }
-                return utils.result(res, codeSuccess, msgSuccess,event);
+                Event.findOneAndUpdate(
+                    {_id:event._id},
+                    {Point:eventPoint._id},
+                    {new:true},
+                    function (err) {
+                        if(err){
+                            console.log(err);
+                            return utils.result(res,code.serverError,msg.serverError,null);
+                        }
+                        return utils.result(res, code.success, msg.success,event);
+                    }
+                );
             });
         });
     });
 };
 
 exports.getAllEvents = function (req,res) {
-    Event.find({}, function (err,allEvents) {
-        if(err){
-            return utils.result(res, codeServerError, msgServerError,null);
-        }
-        return utils.result(res,codeSuccess,msgSuccess,allEvents)
-    })
+    Event.find()
+        .populate('Point')
+        .exec(function (err,results) {
+            if(err) {
+                console.log('err');
+                return utils.result(res, code.serverError, msg.serverError, null);
+            }
+            return utils.result(res,code.success,msg.success,results);
+        })
 };
 
 exports.getEventById = function (req,res) {
     Event.findOne({
        _id:req.params.eventId
     }, function (err,eventExist) {
-        if(!eventExist){
-            return utils.result(res,codeNotFound,eventNotFound,null);
-        }
         if(err){
             console.log(err);
-            return utils.result(res, codeServerError, msgServerError, null);
+            return utils.result(res,code.serverError,msg.serverError,null);
         }
-        return utils.result(res,codeSuccess,msgSuccess,eventExist);
-    });
+        if(!eventExist){
+            return utils.result(res,code.notFound,msg.eventNotFound,null);
+        }
+    })
+        .populate('Point')
+        .exec(function (err,result) {
+            if (err) {
+                console.log(err);
+                return utils.result(res,code.serverError,msg.serverError,null);
+            }
+            return utils.result(res, code.success, msg.success, result);
+        })
 };
 
 exports.updateEventById = function (req,res) {
     var body = req.body;
     if(req.body._id){
-        return utils.result(res,codeBadRequest,noUpdateUserId,null);
+        return utils.result(res,code.badRequest,msg.noUpdateUserId,null);
     }
     if(body.eventType && (body.eventType > 4 || body.eventType < 0)){
-        return utils.result(res,codeBadRequest,invalidEventType,null);
+        return utils.result(res,code.badRequest,msg.invalidEventType,null);
     }
     if(body.density && (body.density < 0 || body.density >4)){
-        return utils.result(res,codeBadRequest,invalidDensity,null);
+        return utils.result(res,code.badRequest,msg.invalidDensity,null);
     }
     if(body.motorbike_speed && (body.motorbike_speed <0 || body.motorbike_speed > 3)){
-        return utils.result(res,codeBadRequest,invalidMotorbikeSpeed,null);
+        return utils.result(res,code.badRequest,msg.invalidMotorbikeSpeed,null);
     }
     if(body.car_speed && (body.car_speed <0 || body.car_speed > 3)){
-        return utils.result(res,codeBadRequest,invalidCarSpeed,null);
+        return utils.result(res,code.badRequest,msg.invalidCarSpeed,null);
     }
 
     Event.findByIdAndUpdate(req.params.eventId, body,{new: true}, function (err, event) {
         if(!event)
-            return utils.result(res, codeNotFound, eventNotFound, null);
+            return utils.result(res, code.notFound, msg.eventNotFound, null);
         if(err)
-            return utils.result(res, codeServerError, msgServerError, null);
-        return utils.result(res, codeSuccess, msgSuccess, event);
+            return utils.result(res,code.serverError,msg.serverError,null);
+        return utils.result(res, code.success, msg.success, event);
     });
 };
 
@@ -148,25 +146,25 @@ exports.deleteEvent = function (req,res) {
         _id:req.params.eventId
     }, function (err,eventExist) {
         if(err) {
-            return utils.result(res, codeServerError, msgServerError, null);
+            return utils.result(res,code.serverError,msg.serverError,null);
         }
         if(eventExist) {
             Event.remove({
                 _id:req.params.eventId
             }, function (err, deleted) {
                 if(!deleted){
-                    return utils.result(res, codeNotFound, eventNotFound, null);
+                    return utils.result(res, code.notFound, msg.eventNotFound, null);
                 }
                 if(err) {
-                    return utils.result(res, codeServerError, msgServerError, null);
+                    return utils.result(res,code.serverError,msg.serverError,null);
                 }
                 if(deleted){
-                    return utils.result(res, codeSuccess, msgSuccess, null);
+                    return utils.result(res, code.success, msg.success, null);
                 }
             });
         }
         else{
-            return utils.result(res, codeNotFound, eventNotFound, null);
+            return utils.result(res, code.notFound, msg.eventNotFound, null);
         }
     });
 };
