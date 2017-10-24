@@ -9,10 +9,13 @@ var mongoClient = database.MongoClient;
 
 var routes = require('./api/Routes.js');
 
-var User = require('./api/User/UserModel.js');
-var TrafficEvent  = require('./api/TrafficEvent/Main/TrafficEventModel.js');
-var GPSData = require('./api/GPSData/GPSDataModel.js');
-var TrafficEventPoint = require('./api/TrafficEvent/Main/Points/TrafficEventPointModel.js');
+//Schemas registration
+var User = require('./api/User/UserModel.js'),
+    TrafficEvent  = require('./api/TrafficEvent/Main/TrafficEventModel.js'),
+    GPSData = require('./api/GPSData/GPSDataModel.js'),
+    TrafficEventPoint = require('./api/TrafficEvent/Main/Points/TrafficEventPointModel.js')
+    UserPoint = require('./api/User/Points/PointModel.js')
+;
 
 var configDB = require('./config/BananaConst.js');
 var jwt = require('jsonwebtoken');
@@ -32,10 +35,3 @@ var server = app.listen(process.env.PORT || 3500, function () {
     var port = server.address().port;
     console.log("App now running on port", port);
 });
-//
-// app.get('/', function (req, res) {
-//     res.status(200).send('WELCOME TO BANANA');
-// });
-// app.get('/test', function (req, res) {
-//     res.status(200).send('testID');
-// });

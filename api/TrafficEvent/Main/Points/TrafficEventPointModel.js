@@ -4,8 +4,8 @@ var Schema = mongoose.Schema;
 
 var trafficPointsSchema = new Schema({
     event_id:{
-        type:String,
-        required: true
+        type:Schema.ObjectId,
+        ref:'TrafficEvent'
     },
     isVerified:{
         type:Boolean,

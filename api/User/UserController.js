@@ -1,38 +1,19 @@
 'use strict';
 var mongoose = require('mongoose'),
+    utils = require('../../Utils/MainUtils.js'),
     User = mongoose.model('User'),
+    Point = mongoose.model('PointByMonth'),
     passwordHash = require('password-hash'),
-    jwt = require('jsonwebtoken');
-const
-    codeServerError = 500,
-    codeBadRequest = 400,
-    codeNotFound = 401,
-
-    msgServerError = "Server Internal Error",
-    msgNoEmail = "Please enter your email",
-    msgNoPassword = "Please enter your password",
-    msgNoConfirmPassword = "Please enter your password confirmation",
-    msgPasswordNotMatch = "Passwords do not match",
-    msgNoOldPassword = "Please enter your old password",
-    msgNoNewPassword = "Please enter your new password",
-    msgIncorrectOldPassword = "The old password is incorrect",
-    msgEmailExist = "This email has been taken",
-    msgUserNotFound = "User not found",
-    msgWrongEmail = "Email not found",
-    msgWrongPassword = "Password is incorrect"
-    ;
-
-const
-    codeSuccess = 200,
-    msgSuccess = "Success",
-    msgAccountCreated = "Account successfully created"
+    jwt = require('jsonwebtoken'),
+    code = require('../../Data/Code.js'),
+    msg = require('../../Data/Message.js');
 ;
 
 exports.getAllUser = function(req, res) {
     User.find({}, function(err, user) {
         if (err)
-            return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, ({
+            return utils.result(res, code.serverError, msg.serverError, null);
+        return utils.result(res, code.success, msg.success, ({
             email:user.email,
             nickname:user.nickname,
             address:user.address,
@@ -45,16 +26,16 @@ exports.getAllUser = function(req, res) {
 exports.createUser = function(req, res) {
     var body = req.body;
     if (!body.email){
-       return result(res, codeBadRequest, msgNoEmail , null)
+       return utils.result(res, code.badRequest, msg.noEmail , null)
     }
     if (!body.password){
-        return result(res, codeBadRequest, msgNoPassword, null)
+        return utils.result(res, code.badRequest, msg.noPassword , null)
     }
     if(!body.confirmPassword){
-        return result(res, codeBadRequest, msgNoConfirmPassword, null)
+        return utils.result(res, code.badRequest, msg.noConfirmPassword , null)
     }
     if(body.password !== body.confirmPassword)
-        return result(res, codeBadRequest, msgPasswordNotMatch, null);
+        return utils.result(res, code.badRequest, msg.passwordNotMatch , null)
     var newUser = new User(body);
     User.findOne(
         {
@@ -62,28 +43,38 @@ exports.createUser = function(req, res) {
         }
         ,function(err,emailExist){
             if(emailExist) { // user exists
-                return result(res, codeBadRequest, msgEmailExist, null);
+                return utils.result(res, code.badRequest, msg.emailExist , null)
             }
             else{
                 newUser.password = passwordHash.generate(newUser.password);
                 newUser.confirmPassword = passwordHash.generate(newUser.confirmPassword);
 
-                console.log(newUser.password);
-                console.log(newUser.confirmPassword);
-
                 newUser.save(function(err, user) {
                     if (err) {
                         console.log(err);
-                        return result(res, codeServerError, msgServerError, null)
+                        return utils.result(res, code.serverError, msg.serverError, null)
                     }
                     else {
-                        return result(res, codeSuccess, msgAccountCreated, ({
+
+                        var point = new Point({
+                            userId:user._id,
+                            month:(new Date()).getUTCMonth(),
+                            year:(new Date()).getUTCFullYear()
+                        });
+                        point.save(function(err){
+                            if (err) {
+                                console.log(err);
+                                return utils.result(res, code.serverError, msg.serverError, null)
+                            }
+                        });
+                        return utils.result(res, code.success, msg.accountCreated, ({
                             _id:user._id,
                             email:user.email,
                             nickname:user.nickname,
                             address:user.address,
                             phone:user.phone,
-                            created_at:user.created_at
+                            created_at:user.created_at,
+                            Point:point
                         }))
                     }
                 });
@@ -97,20 +88,32 @@ exports.getUserById = function(req, res) {
         _id:req.params.userId
     }, function (err,userExist) {
         if(!userExist) {
-            return result(res, codeNotFound, msgUserNotFound, null);
+            return utils.result(res, code.notFound, msg.userNotFound, null);
         }
         if(err) {
             console.log(err);
-            return result(res, codeServerError, msgServerError, null);
+            return utils.result(res, code.serverError, msg.serverError, null)
         }
-        return result(res, codeSuccess, msgSuccess, ({
-            _id:userExist._id,
-            email:userExist.email,
-            nickname:userExist.nickname,
-            address:userExist.address,
-            phone:userExist.phone,
-            created_at:userExist.created_at
-        }));
+        Point.find({userId:userExist._id},
+            function (err,pointResult) {
+                if(err) {
+                    console.log(err);
+                    return utils.result(res, code.serverError, msg.serverError, null)
+                }
+                else {
+                    return utils.result(res, code.success, msg.success, ({
+                        _id:userExist._id,
+                        email:userExist.email,
+                        nickname:userExist.nickname,
+                        address:userExist.address,
+                        phone:userExist.phone,
+                        created_at:userExist.created_at,
+                        Point:pointResult
+                    }));
+                }
+            }
+        );
+
     });
 };
 
@@ -118,10 +121,10 @@ exports.updateById = function(req, res) {
     var body = req.body;
     User.findByIdAndUpdate(req.params.userId, body,{new: true}, function (err, user) {
         if(!user)
-            return result(res, codeNotFound, msgUserNotFound, null);
+            return utils.result(res, code.notFound, msg.userNotFound, null);
         if(err)
-            return result(res, codeServerError, msgServerError, null);
-        return result(res, codeSuccess, msgSuccess, ({
+            return utils.result(res, code.serverError, msg.serverError, null)
+        return utils.result(res, code.success, msg.success, ({
             _id:user._id,
             email:user.email,
             nickname:user.nickname,
@@ -137,25 +140,25 @@ exports.deleteUserById = function(req, res) {
         _id:req.params.userId
     }, function (err,userExist) {
         if(err) {
-            return result(res, codeServerError, msgServerError, null);
+            return utils.result(res, code.serverError, msg.serverError, null)
         }
         if(userExist) {
             User.remove({
                 _id:req.params.userId
             }, function (err, deleted) {
                 if(!deleted){
-                    return result(res, codeNotFound, msgUserNotFound, null);
+                    return utils.result(res, code.notFound, msg.userNotFound, null);
                 }
                 if(err) {
-                    return result(res, codeServerError, msgServerError, null);
+                    return utils.result(res, code.serverError, msg.serverError, null)
                 }
                 if(deleted){
-                    return result(res, codeSuccess, msgSuccess, ({}));
+                    return utils.result(res, code.success, msg.success, ({}));
                 }
             });
         }
         else{
-            return result(res, codeNotFound, msgUserNotFound, null);
+            return utils.result(res, code.notFound, msg.userNotFound, null);
         }
     });
 };
@@ -165,34 +168,34 @@ exports.updatePassword = function (req, res) {
         _id:req.params.userId
     }, function (err,userExist) {
         if(!userExist) {
-            return result(res, codeNotFound, msgUserNotFound, null);
+            return utils.result(res, code.notFound, msg.userNotFound, null);
         }
         if(err) {
             console.log(err);
-            return result(res, codeServerError, msgServerError, null);
+            return utils.result(res, code.serverError, msg.serverError, null)
         }
         var body = req.body;
         if(!body.password)
-            return result(res, codeBadRequest, msgNoOldPassword, null);
+            return utils.result(res, code.badRequest, msg.noOldPassword, null);
         if(!body.newPassword)
-            return result(res, codeBadRequest, msgNoNewPassword, null);
+            return utils.result(res, code.badRequest, msg.noNewPassword, null);
         if(!body.confirmPassword)
-            return result(res, codeBadRequest, msgNoConfirmPassword, null);
+            return utils.result(res, code.badRequest, msg.noConfirmPassword, null);
         if(userExist.password !== body.password)
-            return result(res, codeBadRequest, msgIncorrectOldPassword, null);
+            return utils.result(res, code.badRequest, msg.incorrectOldPassword, null);
         if(body.newPassword !== body.confirmPassword)
-            return result(res, codeBadRequest, msgPasswordNotMatch, null);
+            return utils.result(res, code.badRequest, msg.passwordNotMatch, null);
         userExist.update({
             password:body.newPassword,
             confirmPassword:body.confirmPassword
         },{new:true},function (err,user) {
             if(err)
-                return result(res, codeServerError, msgServerError, null);
+                return utils.result(res, code.serverError, msg.serverError, null)
 
             userExist.password = passwordHash.generate(body.newPassword);
             userExist.confirmPassword = passwordHash.generate(body.confirmPassword);
 
-            return result(res, codeSuccess, msgSuccess, ({
+            return utils.result(res, code.success, msg.success, ({
                 _id:user._id,
                 email:user.email,
                 nickname:user.nickname,
@@ -209,10 +212,10 @@ exports.login = function (req, res) {
     console.log(req.body);
     var body = req.body;
     if(!body.email){
-        return result(res, codeBadRequest, msgNoEmail, null);
+        return utils.result(res, code.badRequest, msg.noEmail, null);
     }
     if(!body.password){
-        return result(res, codeBadRequest, msgNoPassword, null);
+        return utils.result(res, code.badRequest, msg.noPassword, null);
     }
 
     User.findOne(
@@ -221,11 +224,11 @@ exports.login = function (req, res) {
         }
         ,function(err,accountExist){
             if(err) {
-                return result(res, codeServerError, msgServerError, null);
+                return utils.result(res, code.serverError, msg.serverError, null);
             }
             if(accountExist) { // user exists
                 if(!passwordHash.verify(body.password,accountExist.password)) //checkPassword
-                    return result(res, codeNotFound, msgWrongPassword, null);
+                    return utils.result(res, code.notFound, msg.wrongPassword, null);
                 const payload = {
                     _id:accountExist._id,
                     nickname: accountExist.nickname,
@@ -237,7 +240,7 @@ exports.login = function (req, res) {
                 var tokenResponse = jwt.sign(payload, "minionAndGru", {
                     expiresIn: 4320 // expires in 72 hours
                 });
-                return result(res,codeSuccess,msgSuccess, {
+                return utils.result(res,code.success,msg.success, {
                     token:tokenResponse,
                     _id:accountExist._id,
                     nickname: accountExist.nickname,
@@ -246,33 +249,8 @@ exports.login = function (req, res) {
                 });
             }
             else{
-                return result(res, codeNotFound, msgWrongEmail, null);
+                return utils.result(res, code.notFound, msg.wrongEmail, null);
             }
         }
     );
 };
-
-function result(res, code, message, body){
-    var isSuccess = code == codeSuccess;
-    if(!body){
-        return res.json({
-            success:isSuccess,
-            code : code,
-            message : message
-        })
-    }
-    return res.json({
-        success:isSuccess,
-        code : code,
-        message : message,
-        data: body
-    })
-}
-function resultWithToken(res,token,body){
-    return res.json({
-        success:true,
-        message: msgSuccess,
-        token: token,
-        data: body
-    })
-}

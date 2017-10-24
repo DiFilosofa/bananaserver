@@ -78,6 +78,10 @@ var trafficEventSchema = new Schema({
         type:Number,
         min:1,
         max:24
+    },
+    Point:{
+        type:Schema.ObjectId,
+        ref:'TrafficEventPoint'
     }
 });
 
