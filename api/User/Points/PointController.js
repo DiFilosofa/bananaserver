@@ -82,7 +82,18 @@ exports.updatePoint = function(userId,isUpvote){
                                 console.log(err);
                                 return false;
                             }
-                            return true;
+                            user.update(
+                                {},
+                                {$inc:{point_sum:point}},
+                                {},
+                                function (err) {
+                                    if(err){
+                                        console.log(err);
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            );
                         })
                     }
                     return true;

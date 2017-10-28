@@ -185,8 +185,10 @@ exports.updatePassword = function (req, res) {
             return utils.result(res, code.badRequest, msg.noNewPassword, null);
         if(!body.confirmPassword)
             return utils.result(res, code.badRequest, msg.noConfirmPassword, null);
-        if(userExist.password !== body.password)
+        if(userExist.password !== body.password) {
+            console.log(userExist.password);
             return utils.result(res, code.badRequest, msg.incorrectOldPassword, null);
+        }
         if(body.newPassword !== body.confirmPassword)
             return utils.result(res, code.badRequest, msg.passwordNotMatch, null);
         userExist.update({
@@ -194,19 +196,19 @@ exports.updatePassword = function (req, res) {
             confirmPassword:body.confirmPassword
         },{new:true},function (err,user) {
             if(err)
-                return utils.result(res, code.serverError, msg.serverError, null)
+                return utils.result(res, code.serverError, msg.serverError, null);
 
             userExist.password = passwordHash.generate(body.newPassword);
             userExist.confirmPassword = passwordHash.generate(body.confirmPassword);
 
-            return utils.result(res, code.success, msg.success, ({
+            return utils.result(res, code.success, msg.success, {
                 _id:user._id,
                 email:user.email,
                 nickname:user.nickname,
                 address:user.address,
                 phone:user.phone,
                 created_at:user.created_at
-            }));
+            });
         });
     });
 
