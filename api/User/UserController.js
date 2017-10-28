@@ -6,21 +6,24 @@ var mongoose = require('mongoose'),
     passwordHash = require('password-hash'),
     jwt = require('jsonwebtoken'),
     code = require('../../Data/Code.js'),
-    msg = require('../../Data/Message.js');
+    msg = require('../../Data/Message.js')
 ;
 
 exports.getAllUser = function(req, res) {
-    User.find({}, function(err, user) {
-        if (err)
-            return utils.result(res, code.serverError, msg.serverError, null);
-        return utils.result(res, code.success, msg.success, ({
-            email:user.email,
-            nickname:user.nickname,
-            address:user.address,
-            phone:user.phone,
-            created_at:user.created_at
-        }))
-    });
+    User.find(
+        {},
+        {//Exclude
+            password:0,
+            confirmPassword:0
+        })
+        .populate('UserPoints')
+        .exec(function (err,users) {
+            if(err){
+                console.log(err);
+                return utils.result(res,code.serverError,msg.serverError,null);
+            }
+            return utils.result(res, code.success, msg.success, users)
+        })
 };
 
 exports.createUser = function(req, res) {
@@ -49,33 +52,40 @@ exports.createUser = function(req, res) {
                 newUser.password = passwordHash.generate(newUser.password);
                 newUser.confirmPassword = passwordHash.generate(newUser.confirmPassword);
 
+                var point = new Point({
+                    userId:newUser._id,
+                    month:(new Date()).getUTCMonth(),
+                    year:(new Date()).getUTCFullYear()
+                });
+                point.save(function(err){
+                    if (err) {
+                        console.log(err);
+                        return utils.result(res, code.serverError, msg.serverError, null)
+                    }
+                    else {
+                        newUser.UserPoints.push(point)
+                    }
+                });
                 newUser.save(function(err, user) {
                     if (err) {
                         console.log(err);
                         return utils.result(res, code.serverError, msg.serverError, null)
                     }
                     else {
+                        return utils.result(res, code.success, msg.accountCreated,
+                            {
+                                _id:user._id,
+                                email:user.email,
+                                UserPoints:user.UserPoints,
+                                point_sum:user.point_sum,
+                                created_at:user.created_at,
+                                level:user.level,
+                                phone:user.phone,
+                                address:user.address,
+                                nickname:user.nickname
 
-                        var point = new Point({
-                            userId:user._id,
-                            month:(new Date()).getUTCMonth(),
-                            year:(new Date()).getUTCFullYear()
-                        });
-                        point.save(function(err){
-                            if (err) {
-                                console.log(err);
-                                return utils.result(res, code.serverError, msg.serverError, null)
                             }
-                        });
-                        return utils.result(res, code.success, msg.accountCreated, ({
-                            _id:user._id,
-                            email:user.email,
-                            nickname:user.nickname,
-                            address:user.address,
-                            phone:user.phone,
-                            created_at:user.created_at,
-                            Point:point
-                        }))
+                        )
                     }
                 });
             }
@@ -84,9 +94,15 @@ exports.createUser = function(req, res) {
 };
 
 exports.getUserById = function(req, res) {
-    User.findOne({
-        _id:req.params.userId
-    }, function (err,userExist) {
+    User.findOne(
+        {
+            _id:req.params.userId
+        },
+        {//Exclude
+            password:0,
+            confirmPassword:0
+        }
+        , function (err,userExist) {
         if(!userExist) {
             return utils.result(res, code.notFound, msg.userNotFound, null);
         }
@@ -94,27 +110,15 @@ exports.getUserById = function(req, res) {
             console.log(err);
             return utils.result(res, code.serverError, msg.serverError, null)
         }
-        Point.find({userId:userExist._id},
-            function (err,pointResult) {
-                if(err) {
-                    console.log(err);
-                    return utils.result(res, code.serverError, msg.serverError, null)
-                }
-                else {
-                    return utils.result(res, code.success, msg.success, ({
-                        _id:userExist._id,
-                        email:userExist.email,
-                        nickname:userExist.nickname,
-                        address:userExist.address,
-                        phone:userExist.phone,
-                        created_at:userExist.created_at,
-                        Point:pointResult
-                    }));
-                }
+    }).populate('UserPoints')
+        .exec(function (err,result) {
+            if(err){
+                console.log(err);
+                return utils.result(res,code.serverError,msg.serverError,null)
             }
-        );
-
-    });
+            console.log(result);
+            return utils.result(res,code.success,msg.success,result);
+        })
 };
 
 exports.updateById = function(req, res) {
@@ -123,7 +127,7 @@ exports.updateById = function(req, res) {
         if(!user)
             return utils.result(res, code.notFound, msg.userNotFound, null);
         if(err)
-            return utils.result(res, code.serverError, msg.serverError, null)
+            return utils.result(res, code.serverError, msg.serverError, null);
         return utils.result(res, code.success, msg.success, ({
             _id:user._id,
             email:user.email,
@@ -253,4 +257,14 @@ exports.login = function (req, res) {
             }
         }
     );
+};
+exports.getLeaderboard=function (req,res) {
+    var body = req.body;
+    if(body.year == null && body.month == null)
+        return utils.result(res,code.badRequest,msg.yearAndMonthNotFound,null);
+    if(body.year == null){
+        //Sort by month only
+        //
+    }
+    //Sort by year
 };
