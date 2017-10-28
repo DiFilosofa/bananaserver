@@ -36,8 +36,15 @@ var userSchema = new Schema({
     created_at:{
         type:Date,
         default: Date.now
-    }
-
+    },
+    point_sum:{
+        type:Number,
+        default: 0
+    },
+    UserPoints:[{
+        type:Schema.ObjectId,
+        ref:'PointByMonth'
+    }]
 });
 var UserModel = mongoose.model('User', userSchema);
 
