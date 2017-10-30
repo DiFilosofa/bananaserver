@@ -255,13 +255,36 @@ exports.login = function (req, res) {
         }
     );
 };
-exports.getLeaderboard=function (req,res) {
-    var body = req.body;
-    if(body.year == null && body.month == null)
-        return utils.result(res,code.badRequest,msg.yearAndMonthNotFound,null);
-    if(body.year == null){
-        //Sort by month only
-        //
-    }
-    //Sort by year
+
+exports.getLeaderboardAllTime=function (req,res) {
+    User.find({})
+        .sort({point_sum:-1})
+        .populate('UserPoints')
+        .exec(function (err,results) {
+            if(err){
+                console.log(err);
+                return utils.result(res,code.serverError,msg.serverError,null)
+            }
+            return utils.result(res,code.success,msg.success,results)
+    })
+};
+
+exports.getLeaderboardByMonth = function (req,res) {
+    // User.find()
+    //     .populate(
+    //         'UserPoints',
+    //         'point',
+    //         null,
+    //         {sort:'order'})
+    //     .exec(function (err,results) {
+    //         if(err){
+    //             console.log(err);
+    //             return utils.result(res,code.serverError,msg.serverError,null)
+    //         }
+    //         return utils.result(res,code.success,msg.success,results);
+    //     })
+};
+
+exports.getLeaderboardByYear = function (req,res) {
+
 };
