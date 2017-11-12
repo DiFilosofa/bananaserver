@@ -1,6 +1,7 @@
 'use strict';
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var ttl = require('mongoose-ttl');
 
 var trafficEventSchema = new Schema({
     userId:{
@@ -89,6 +90,6 @@ var trafficEventSchema = new Schema({
         ref:'TrafficEventPoint'
     }
 });
-
+trafficEventSchema.plugin(ttl,{ttl:60000});
 var EventModel = mongoose.model('TrafficEvent',trafficEventSchema);
 module.exports = EventModel;
