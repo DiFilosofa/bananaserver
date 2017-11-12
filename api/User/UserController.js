@@ -63,10 +63,8 @@ exports.createUser = function(req, res) {
                         console.log(err);
                         return utils.result(res, code.serverError, msg.serverError, null)
                     }
-                    else {
-                        newUser.UserPoints.push(point)
-                    }
                 });
+                newUser.UserPoints.push(point);
                 newUser.save(function(err, user) {
                     if (err) {
                         console.log(err);
