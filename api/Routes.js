@@ -16,8 +16,8 @@ module.exports = function(app) {
     apiRoutes.get('/events',events.getAllEvents);
     apiRoutes.get('/events/:eventId',events.getEventById);
     apiRoutes.get('/leaderboard',users.getLeaderboardAllTime);
-    apiRoutes.get('/leaderboard/month/:month',users.getLeaderboardByMonth);
-    apiRoutes.get('/leaderboard/year/:year',users.getLeaderboardByYear);
+    apiRoutes.get('/leaderboard/month/:time',users.getLeaderboardByMonth);
+    apiRoutes.get('/leaderboard/year/:time',users.getLeaderboardByYear);
 
     apiRoutes.use(function (req,res,next) {
         // check header or url parameters or post parameters for token
