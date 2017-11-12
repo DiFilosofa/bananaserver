@@ -12,8 +12,12 @@ module.exports = function(app) {
     // Account
     apiRoutes.post('/user',users.createUser);
     apiRoutes.post('/user/login',users.login);
+    apiRoutes.get('/user',users.getAllUser);
     apiRoutes.get('/events',events.getAllEvents);
     apiRoutes.get('/events/:eventId',events.getEventById);
+    apiRoutes.get('/leaderboard',users.getLeaderboardAllTime);
+    apiRoutes.get('/leaderboard/month/:month',users.getLeaderboardByMonth);
+    apiRoutes.get('/leaderboard/year/:year',users.getLeaderboardByYear);
 
     apiRoutes.use(function (req,res,next) {
         // check header or url parameters or post parameters for token

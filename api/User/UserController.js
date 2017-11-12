@@ -14,7 +14,8 @@ exports.getAllUser = function(req, res) {
         {},
         {//Exclude
             password:0,
-            confirmPassword:0
+            confirmPassword:0,
+            queryTimePoints:0
         })
         .populate('UserPoints')
         .exec(function (err,users) {
@@ -100,23 +101,23 @@ exports.getUserById = function(req, res) {
         },
         {//Exclude
             password:0,
-            confirmPassword:0
+            confirmPassword:0,
+            queryTimePoints:0
         }
         , function (err,userExist) {
-            if(!userExist) {
-                return utils.result(res, code.notFound, msg.userNotFound, null);
-            }
-            if(err) {
-                console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, null)
-            }
-        }).populate('UserPoints')
+        if(!userExist) {
+            return utils.result(res, code.notFound, msg.userNotFound, null);
+        }
+        if(err) {
+            console.log(err);
+            return utils.result(res, code.serverError, msg.serverError, null)
+        }
+    }).populate('UserPoints')
         .exec(function (err,result) {
             if(err){
                 console.log(err);
                 return utils.result(res,code.serverError,msg.serverError,null)
             }
-            console.log(result);
             return utils.result(res,code.success,msg.success,result);
         })
 };
@@ -206,7 +207,6 @@ exports.updatePassword = function (req, res) {
 };
 
 exports.login = function (req, res) {
-    console.log(req.body);
     var body = req.body;
     if(!body.email){
         return utils.result(res, code.badRequest, msg.noEmail, null);
@@ -251,13 +251,136 @@ exports.login = function (req, res) {
         }
     );
 };
-exports.getLeaderboard=function (req,res) {
-    var body = req.body;
-    if(body.year == null && body.month == null)
-        return utils.result(res,code.badRequest,msg.yearAndMonthNotFound,null);
-    if(body.year == null){
-        //Sort by month only
-        //
-    }
-    //Sort by year
+
+exports.getLeaderboardAllTime=function (req,res) {
+    User.find({},
+        {//Exclude
+            password:0,
+            confirmPassword:0,
+            queryTimePoints:0
+        })
+        .sort({point_sum:-1})
+        .populate('UserPoints')
+        .exec(function (err,results) {
+            if(err){
+                console.log(err);
+                return utils.result(res,code.serverError,msg.serverError,null)
+            }
+            return utils.result(res,code.success,msg.success,results)
+    })
+};
+
+exports.getLeaderboardByMonth = function (req,res) {
+    var dateInput = new Date(parseFloat(req.params.time));
+    User.find({},
+        {//Exclude
+            password:0,
+            confirmPassword:0,
+            queryTimePoints:0
+        })
+        .populate('UserPoints')
+        .sort({queryTimePoints:-1})
+        .exec(function (err,users) {
+            if (err) {
+                console.log(err);
+                return utils.result(res, code.serverError, msg.serverError, null)
+            }
+            var numberOfUser = users.length;
+            if(numberOfUser === 0){
+                return utils.result(res,code.success,msg.success,users);
+            }
+            var tempList = users.slice();
+            for(var i = 0 ; i < numberOfUser ; i++) {
+                var pointAtMonth = 0;
+                var listOfPoint = tempList[i].UserPoints.slice();
+                var numberOfMonth = listOfPoint.length;
+
+                for (var index = 0; index < numberOfMonth; index++) {
+                    if (listOfPoint[index].month === dateInput.getMonth() && listOfPoint[index].year === dateInput.getFullYear()) {
+                        pointAtMonth = listOfPoint[index].point;
+                        break;
+                    }
+                }
+                console.log(pointAtMonth);
+                User.findByIdAndUpdate(tempList[i]._id, {$set:{queryTimePoints: pointAtMonth}}, { new: true }, function (err) {
+                    if (err) {
+                        console.log(err);
+                        return utils.result(res, code.serverError, msg.serverError, null);
+                    }
+                });
+            }
+            console.log("DONE UPDATE");
+            ///Temporary
+            User.find(
+                {},
+                {//Exclude
+                    password:0,
+                    confirmPassword:0,
+                    queryTimePoints:0
+                })
+                .sort({queryTimePoints:-1}).exec(function (err,results) {
+                if(err){
+                    console.log(err);
+                    return utils.result(res, code.serverError, msg.serverError, null);
+                }
+                console.log("DONE SORT");
+                return utils.result(res, code.success, msg.success, results);
+            })
+        });
+};
+
+exports.getLeaderboardByYear = function (req,res) {
+    var dateInput = new Date(parseFloat(req.params.time));
+    User.find({},
+        {//Exclude
+            password:0,
+            confirmPassword:0,
+            queryTimePoints:0
+        })
+        .populate('UserPoints')
+        .sort({queryMonthPoint:-1})
+        .exec(function (err,users) {
+            if (err) {
+                console.log(err);
+                return utils.result(res, code.serverError, msg.serverError, null)
+            }
+            var numberOfUser = users.length;
+            if(numberOfUser === 0){
+                return utils.result(res,code.success,msg.success,users);
+            }
+            var tempList = users.slice();
+            for(var i = 0 ; i < numberOfUser ; i++) {
+                var pointAtYear = 0;
+                var listOfPoint = tempList[i].UserPoints.slice();
+                var numberOfMonth = listOfPoint.length;
+
+                for (var index = 0; index < numberOfMonth; index++) {
+                    if (listOfPoint[index].year === dateInput.getFullYear()) {
+                        pointAtYear += listOfPoint[index].point;
+                    }
+                }
+                User.findByIdAndUpdate(tempList[i]._id, {queryTimePoints: pointAtYear}, {new: true}, function (err) {
+                    if (err) {
+                        console.log(err);
+                        return utils.result(res, code.serverError, msg.serverError, null);
+                    }
+                });
+            }
+            console.log("DONE UPDATE");
+            ///Temporary
+            User.find(
+                {},
+                {//Exclude
+                    password:0,
+                    confirmPassword:0,
+                    queryTimePoints:0
+                }).sort({queryTimePoints:-1}).exec(function (err,results) {
+                if(err){
+                    console.log(err);
+                    return utils.result(res, code.serverError, msg.serverError, null);
+                }
+                console.log("DONE SORT");
+                return utils.result(res, code.success, msg.success, results);
+            })
+        });
 };

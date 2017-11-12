@@ -4,8 +4,8 @@ var Schema = mongoose.Schema;
 
 var pointSchema = new Schema({
     userId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User'
+        type:Schema.ObjectId,
+        ref:'UserModel'
     },
     month:{
         type:Number,

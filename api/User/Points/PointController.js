@@ -4,46 +4,6 @@ var mongoose = require('mongoose'),
     User = mongoose.model('User')
 ;
 
-exports.createNewPoint = function (userId) {
-    //find a user
-    //if user exist, check if point for new month exist
-    //if PointByMonth exist -> skip
-    //else create
-    User.findOne({_id:userId},function (err,user) {
-        if(err){
-            console.log(err);
-            return null;
-        }
-        if(!user){
-            return null;
-        }
-
-        UserPoint.findOne({
-            month:(new Date()).getUTCMonth(),
-            year:(new Date()).getUTCFullYear()
-        },function (err,result) {
-            if(err){
-                console.log(err);
-                return null;
-            }
-            if(!result){
-                (new UserPoint({
-                    userId:userId,
-                    month:(new Date()).getUTCMonth(),
-                    year:(new Date()).getUTCFullYear()
-                })).save(function (err,newPoint) {
-                    if(err){
-                        console.log(err);
-                        return null;
-                    }
-                    return newPoint;
-                })
-            }
-            return result;
-        });
-    });
-};
-
 exports.updatePoint = function(userId,isUpvote){
     ///Find by userID
     //Check if point for that month exist,
@@ -60,8 +20,8 @@ exports.updatePoint = function(userId,isUpvote){
             UserPoint.findOneAndUpdate(
                 {
                     userId:user._id,
-                    month:(new Date()).getUTCMonth(),
-                    year:(new Date()).getUTCFullYear()
+                    month:(new Date()).getMonth(),
+                    year:(new Date()).getFullYear()
                 },
                 {$inc:{point:point}},
                 {new:true},
@@ -70,24 +30,42 @@ exports.updatePoint = function(userId,isUpvote){
                         console.log(err);
                         return false;
                     }
-                    if(!userPoint){
-                        userPoint = new UserPoint({
-                            userId:user._id,
-                            month:(new Date()).getUTCMonth(),
-                            year:(new Date()).getUTCFullYear(),
-                            point:point
-                        });
-                        userPoint.save(function (err) {
-                            if(err) {
-                                console.log(err);
-                                return false;
-                            }
-                            return true;
-                        })
+                    if(userPoint === null|| userPoint.length == 0){
+                        createUserPoint(user._id,point);
                     }
-                    return true;
+                    return updateUserSumPoint(user,point);
                 }
             )
         }
     )
 };
+
+function updateUserSumPoint(user,point) {
+    user.update(
+        {$inc:{point_sum:point}},
+        function (err) {
+            if(err){
+                console.log(err);
+                return false;
+            }
+            return true;
+        }
+    );
+}
+
+function createUserPoint(userId,point){
+    var newUserPoint = new UserPoint({
+        userId:userId,
+        month:(new Date()).getMonth(),
+        year:(new Date()).getFullYear(),
+        point:point
+    });
+    newUserPoint.save(function (err,result) {
+        if(err) {
+            console.log(err);
+            return false;
+        }
+        console.log(result);
+        return true;
+    });
+}
