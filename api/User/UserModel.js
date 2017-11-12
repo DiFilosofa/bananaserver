@@ -44,7 +44,12 @@ var userSchema = new Schema({
     UserPoints:[{
         type:Schema.ObjectId,
         ref:'PointByMonth'
-    }]
+    }],
+    queryTimePoints:{
+        type:Number,
+        default:0
+    }
+
 });
 var UserModel = mongoose.model('User', userSchema);
 

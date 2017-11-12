@@ -20,8 +20,8 @@ exports.updatePoint = function(userId,isUpvote){
             UserPoint.findOneAndUpdate(
                 {
                     userId:user._id,
-                    month:(new Date()).getUTCMonth(),
-                    year:(new Date()).getUTCFullYear()
+                    month:(new Date()).getMonth(),
+                    year:(new Date()).getFullYear()
                 },
                 {$inc:{point:point}},
                 {new:true},
@@ -30,15 +30,8 @@ exports.updatePoint = function(userId,isUpvote){
                         console.log(err);
                         return false;
                     }
-                    if(!userPoint){
-                        userPoint = createUserPoint(user._id,point);
-                        userPoint.save(function (err) {
-                            if(err) {
-                                console.log(err);
-                                return false;
-                            }
-                            return updateUserSumPoint(user,point);
-                        })
+                    if(userPoint === null|| userPoint.length == 0){
+                        createUserPoint(user._id,point);
                     }
                     return updateUserSumPoint(user,point);
                 }
@@ -61,10 +54,18 @@ function updateUserSumPoint(user,point) {
 }
 
 function createUserPoint(userId,point){
-    return new UserPoint({
-        userId:userId._id,
-        month:(new Date()).getUTCMonth(),
-        year:(new Date()).getUTCFullYear(),
+    var newUserPoint = new UserPoint({
+        userId:userId,
+        month:(new Date()).getMonth(),
+        year:(new Date()).getFullYear(),
         point:point
+    });
+    newUserPoint.save(function (err,result) {
+        if(err) {
+            console.log(err);
+            return false;
+        }
+        console.log(result);
+        return true;
     });
 }
