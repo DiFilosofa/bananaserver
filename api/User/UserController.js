@@ -30,7 +30,7 @@ exports.getAllUser = function(req, res) {
 exports.createUser = function(req, res) {
     var body = req.body;
     if (!body.email){
-       return utils.result(res, code.badRequest, msg.noEmail , null)
+        return utils.result(res, code.badRequest, msg.noEmail , null)
     }
     if (!body.password){
         return utils.result(res, code.badRequest, msg.noPassword , null)
@@ -63,29 +63,31 @@ exports.createUser = function(req, res) {
                         console.log(err);
                         return utils.result(res, code.serverError, msg.serverError, null)
                     }
-                    newUser.UserPoints.push(point);
-                    newUser.save(function(err, user) {
-                        if (err) {
-                            console.log(err);
-                            return utils.result(res, code.serverError, msg.serverError, null)
-                        }
-                        else {
-                            return utils.result(res, code.success, msg.accountCreated,
-                                {
-                                    _id:user._id,
-                                    email:user.email,
-                                    UserPoints:user.UserPoints,
-                                    point_sum:user.point_sum,
-                                    created_at:user.created_at,
-                                    level:user.level,
-                                    phone:user.phone,
-                                    address:user.address,
-                                    nickname:user.nickname
+                    else {
+                        newUser.UserPoints.push(point)
+                    }
+                });
+                newUser.save(function(err, user) {
+                    if (err) {
+                        console.log(err);
+                        return utils.result(res, code.serverError, msg.serverError, null)
+                    }
+                    else {
+                        return utils.result(res, code.success, msg.accountCreated,
+                            {
+                                _id:user._id,
+                                email:user.email,
+                                UserPoints:user.UserPoints,
+                                point_sum:user.point_sum,
+                                created_at:user.created_at,
+                                level:user.level,
+                                phone:user.phone,
+                                address:user.address,
+                                nickname:user.nickname
 
-                                }
-                            )
-                        }
-                    });
+                            }
+                        )
+                    }
                 });
             }
         }
@@ -184,30 +186,22 @@ exports.updatePassword = function (req, res) {
             return utils.result(res, code.badRequest, msg.noNewPassword, null);
         if(!body.confirmPassword)
             return utils.result(res, code.badRequest, msg.noConfirmPassword, null);
-        if(userExist.password !== body.password) {
+        if(!passwordHash.verify(body.password,userExist.password)) {
             return utils.result(res, code.badRequest, msg.incorrectOldPassword, null);
         }
         if(body.newPassword !== body.confirmPassword)
             return utils.result(res, code.badRequest, msg.passwordNotMatch, null);
-        userExist.update({
-            password:body.newPassword,
-            confirmPassword:body.confirmPassword
-        },{new:true},function (err,user) {
-            if(err)
-                return utils.result(res, code.serverError, msg.serverError, null);
-
-            userExist.password = passwordHash.generate(body.newPassword);
-            userExist.confirmPassword = passwordHash.generate(body.confirmPassword);
-
-            return utils.result(res, code.success, msg.success, {
-                _id:user._id,
-                email:user.email,
-                nickname:user.nickname,
-                address:user.address,
-                phone:user.phone,
-                created_at:user.created_at
+        userExist.update(
+            {
+                password:passwordHash.generate(body.newPassword),
+                confirmPassword:passwordHash.generate(body.confirmPassword)
+            },
+            {new:true},
+            function (err) {
+                if(err)
+                    return utils.result(res, code.serverError, msg.serverError, null);
+                return utils.result(res, code.success, msg.success, null);
             });
-        });
     });
 
 };

@@ -80,8 +80,9 @@ var trafficEventSchema = new Schema({
     },
     district:{
         type:Number,
-        min:1,
-        max:24
+        min:0,
+        max:24,
+        default:0
     },
     Point:{
         type:Schema.ObjectId,
