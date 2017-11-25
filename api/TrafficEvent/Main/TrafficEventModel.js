@@ -88,6 +88,12 @@ var trafficEventSchema = new Schema({
     Point:{
         type:Schema.ObjectId,
         ref:'TrafficEventPoint'
+    },
+    isUpvoted:{
+        type:Boolean
+    },
+    isDownvoted:{
+        type:Boolean
     }
 });
 trafficEventSchema.plugin(ttl,{ttl:60000});

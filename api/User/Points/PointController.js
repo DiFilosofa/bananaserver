@@ -4,7 +4,7 @@ var mongoose = require('mongoose'),
     User = mongoose.model('User')
 ;
 
-exports.updatePoint = function(userId,isUpvote){
+exports.updatePoint = function(userId,pointUpdate){
     ///Find by userID
     //Check if point for that month exist,
     //If exist -> add / subtract
@@ -16,14 +16,13 @@ exports.updatePoint = function(userId,isUpvote){
                 console.log(err);
                 return false;
             }
-            var point = isUpvote ? 1 : -1;
             UserPoint.findOneAndUpdate(
                 {
                     userId:user._id,
                     month:(new Date()).getMonth(),
                     year:(new Date()).getFullYear()
                 },
-                {$inc:{point:point}},
+                {$inc:{point:pointUpdate}},
                 {new:true},
                 function (err,userPoint) {
                     if(err) {
@@ -31,9 +30,9 @@ exports.updatePoint = function(userId,isUpvote){
                         return false;
                     }
                     if(userPoint === null|| userPoint.length == 0){
-                        createUserPoint(user._id,point);
+                        createUserPoint(user._id,pointUpdate);
                     }
-                    return updateUserSumPoint(user,point);
+                    return updateUserSumPoint(user,pointUpdate);
                 }
             )
         }

@@ -18,7 +18,13 @@ var trafficPointsSchema = new Schema({
     downvotes:{
         type:Number,
         default:0
-    }
+    },
+    UpvoteUsers:[{
+        type:Schema.ObjectId
+    }],
+    DownvoteUsers:[{
+        type:Schema.ObjectId
+    }]
 });
 var EventPoint = mongoose.model('TrafficEventPoint', trafficPointsSchema);
 module.exports = EventPoint;
