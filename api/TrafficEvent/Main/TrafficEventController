@@ -141,22 +141,17 @@ exports.getAllEvents = function (req,res) {
 exports.getEventById = function (req,res) {
     Event.findOne({
            _id:req.params.eventId
-        }, function (err,eventExist) {
-            if(err){
-                console.log(err);
-                return utils.result(res,code.serverError,msg.serverError,null);
-            }
+        })
+        .populate('Point')
+        .exec(function (err,eventExist) {
             if(!eventExist){
                 return utils.result(res,code.notFound,msg.eventNotFound,null);
             }
-        })
-        .populate('Point')
-        .exec(function (err,result) {
             if (err) {
                 console.log(err);
                 return utils.result(res,code.serverError,msg.serverError,null);
             }
-            return utils.result(res, code.success, msg.success, result);
+            return utils.result(res, code.success, msg.success, eventExist);
         })
 };
 
