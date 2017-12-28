@@ -3,13 +3,21 @@ var mongoose = require('mongoose'),
     code = require('../../../Data/Code.js'),
     msg = require('../../../Data/Message.js'),
     utils = require('../../../Utils/MainUtils.js'),
+    aws_s3 = require('../../../Data/AWSConstants'),
     UserPointController = require('../../User/Points/PointController.js'),
     Event = mongoose.model('TrafficEvent'),
     User = mongoose.model('User'),
     EventPoint = mongoose.model('TrafficEventPoint'),
     UserPoint = mongoose.model('PointByMonth'),
-    ttl = require('mongoose-ttl')
+    ttl = require('mongoose-ttl'),
+    util = require("util"),
+    formidable = require('formidable'),
+    AWS = require('aws-sdk'),
+    async = require('async'),
+    fs = require('fs')
 ;
+AWS.config.loadFromPath('S3Config.json');
+const s3 = new AWS.S3({region: aws_s3.region});
 
 exports.createEvent = function (req,res) {
     var body = req.body;
@@ -88,21 +96,80 @@ exports.createEvent = function (req,res) {
                     console.log(err);
                     return utils.result(res,code.serverError,msg.serverError,null);
                 }
-                Event.findOneAndUpdate(
-                    {_id:event._id},
-                    {Point:eventPoint._id},
-                    {new:true},
-                    function (err) {
+                if(err){
+                    console.log(err);
+                    return utils.result(res,code.serverError,msg.serverError,null);
+                }
+                //Update photo path
+                var form = new formidable.IncomingForm();
+                form.parse(req, function (err, fields, files) {
+                    console.log(util.inspect({fields: fields, files: files}));
+                });
+                form.on('error', function (err) {
+                    console.error(err);
+                });
+                form.on('progress', function (bytesReceived, bytesExpected) {
+                    var percent_complete = (bytesReceived / bytesExpected) * 100;
+                    console.log(percent_complete.toFixed(2));
+                });
+                form.on('end', function (fields, files) {
+                    /* Temporary location of our uploaded file */
+                    var tmp_path = this.openedFiles[0].path;
+                    /* The file name of the uploaded file */
+                    var imageName = this.openedFiles[0].name;
+                    fs.readFile(tmp_path, function (err, data) {
                         if(err){
                             console.log(err);
-                            return utils.result(res,code.serverError,msg.serverError,null);
+                            return;
                         }
-                        return utils.result(res, code.success, msg.success,event);
-                    }
-                );
+                        async.series([
+                            createItemObject(imageName, data)
+                        ], function (err, result) {
+                            if (err)
+                                return res.send(err);
+                            else{
+                                var url = aws_s3.dataUrlInitial+imageName;
+                                Event.findOneAndUpdate(
+                                    {_id:event._id},
+                                    {
+                                        Point:eventPoint._id,
+                                        $push: {mediaDatas: url}
+                                    },
+                                    {new:true},
+                                    function (err) {
+                                        if (err) {
+                                            return res.send(err);
+                                        }
+                                        else {
+                                            return utils.result(res, code.success, msg.success,event);
+                                        }
+                                    }
+                                );
+                            }
+                        })
+                    })
+                });
             });
         });
     });
+};
+
+const createItemObject = function (imageName, image) {
+    const params = {
+        Bucket: bucketName,
+        Key: imageName,
+        ACL: 'public-read',
+        Body:image
+    };
+    s3.putObject(params, function (err, data) {
+        if (err) {
+            console.log("Error uploading image: ", err);
+            callback(err, null)
+        } else {
+            console.log("Successfully uploaded image on S3", data);
+            callback(null, data)
+        }
+    })
 };
 
 exports.getAllEvents = function (req,res) {
