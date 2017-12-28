@@ -94,7 +94,10 @@ var trafficEventSchema = new Schema({
     },
     isDownvoted:{
         type:Boolean
-    }
+    },
+    mediaDatas:[{
+        type:String
+    }]
 });
 trafficEventSchema.plugin(ttl,{ttl:60000});
 var EventModel = mongoose.model('TrafficEvent',trafficEventSchema);
