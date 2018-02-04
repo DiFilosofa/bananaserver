@@ -22,12 +22,17 @@
     "nodemon": "^1.12.1"
   },
   "dependencies": {
+    "async": "^2.6.0",
+    "aws-sdk": "^2.169.0",
     "body-parser": "^1.18.2",
     "express": "^4.15.4",
+    "formidable": "^1.1.1",
+    "fs": "0.0.1-security",
     "jsonwebtoken": "^8.1.0",
     "mongodb": "^2.2.31",
     "mongoose": "^4.11.14",
     "mongoose-ttl": "0.0.3",
-    "password-hash": "^1.2.2"
+    "password-hash": "^1.2.2",
+    "util": "^0.10.3"
   }
 }

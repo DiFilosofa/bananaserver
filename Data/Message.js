@@ -1,6 +1,7 @@
 exports.success = "Success";
 exports.serverError = "Server Internal Error";
 exports.noEmail = "Please enter your email";
+exports.noEventId = "Please include eventId";
 exports.noPassword = "Please enter your password";
 exports.noConfirmPassword = "Please enter your password confirmation";
 exports.passwordNotMatch = "Passwords do not match";
@@ -25,3 +26,5 @@ exports.invalidMotorbikeSpeed = "motorbike_speed is invalid";
 exports.accountCreated = "Account successfully created";
 exports.nameNotFound ="Please enter event's name";
 exports.yearAndMonthNotFound = "Please enter year or/and month";
+exports.noFile = "No file chosen.";
+exports.fileNotSupported = "File type not supported";
