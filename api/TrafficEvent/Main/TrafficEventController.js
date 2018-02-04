@@ -57,7 +57,7 @@ exports.createEvent = function (req, res) {
     if (!body.end_longitude) {
         return utils.result(res, code.badRequest, msg.endLongitudeNotFound, null);
     }
-    if (body.eventType && (body.eventType > 4 || body.eventType < 0)) {
+    if (body.eventType && (body.eventType > 3 || body.eventType < 0)) {
         return utils.result(res, code.badRequest, msg.invalidEventType, null);
     }
     if (body.density && (body.density < 0 || body.density > 4)) {
@@ -99,12 +99,12 @@ exports.createEvent = function (req, res) {
         }
         if (err) {
             console.log(err);
-            return utils.result(res, code.serverError, msg.serverError, err);
+            return utils.result(res, code.serverError, msg.serverError, err.message);
         }
         newEvent.save(function (err, event) {
             if (err) {
                 console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             }
             var eventPoint = new EventPoint({
                 event_id: event._id
@@ -112,7 +112,7 @@ exports.createEvent = function (req, res) {
             eventPoint.save(function (err) {
                 if (err) {
                     console.log(err);
-                    return utils.result(res, code.serverError, msg.serverError, err);
+                    return utils.result(res, code.serverError, msg.serverError, err.message);
                 }
                 Event.findOneAndUpdate(
                     {_id: event._id},
@@ -121,7 +121,7 @@ exports.createEvent = function (req, res) {
                     function (err) {
                         if (err) {
                             console.log(err);
-                            return utils.result(res, code.serverError, msg.serverError, err);
+                            return utils.result(res, code.serverError, msg.serverError, err.message);
                         }
                         return utils.result(res, code.success, msg.success, event);
                     }
@@ -139,12 +139,12 @@ exports.updateEventPhotos = function (req, res) {
     Event.findOne(
         {
             _id: eventId
-        }, function (err, eventExist) {
+        }, function (err, event) {
             if (err) {
                 console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             }
-            if (!eventExist) {
+            if (!event) {
                 return utils.result(res, code.notFound, msg.eventNotFound, null);
             }
             var form = new formidable.IncomingForm();
@@ -163,7 +163,7 @@ exports.updateEventPhotos = function (req, res) {
 
             form.on('error', function (err) {
                 console.error("onError : " + err);
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             });
 
             form.on('end', function (fields, files) {
@@ -175,7 +175,7 @@ exports.updateEventPhotos = function (req, res) {
                 /* Temporary location of our uploaded file */
                 var tmp_path = image.path;
                 /* The file name of the uploaded file */
-                imageName = eventId + "_event_img_" + image.name;
+                imageName = eventId + "_event_img_" + event.mediaDatas.length + path.extname(image.name);
 
                 fs.readFile(tmp_path, function (err, data) {
                     if (err) {
@@ -188,24 +188,16 @@ exports.updateEventPhotos = function (req, res) {
                     ], function (err, result) {
                         if (err) {
                             console.log(err);
-                            return utils.result(res, code.serverError, msg.serverError, err);
+                            return utils.result(res, code.serverError, msg.serverError, err.message);
                         }
                     })
                 });
                 var url = aws_s3.dataUrlInitial + imageName;
+                ///update media datas
+                event.mediaDatas.push(url);
+                event.save();
 
-                Event.findOneAndUpdate(
-                    {_id: eventId},
-                    {$push: {mediaDatas: url}},
-                    {new: true},
-                    function (err, event) {
-                        if (err) {
-                            console.log(err);
-                            return utils.result(res, code.serverError, msg.serverError, err);
-                        }
-                        return utils.result(res, code.success, msg.success, event);
-                    }
-                )
+                return utils.result(res, code.success, msg.success, event);
             });
         });
 };
@@ -217,7 +209,7 @@ exports.getAllEvents = function (req, res) {
         .exec(function (err, results) {
             if (err) {
                 console.log('err');
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             }
             var numberOfEvents = results.length;
             var tempList = results.slice();
@@ -254,7 +246,7 @@ exports.getEventById = function (req, res) {
             }
             if (err) {
                 console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             }
             return utils.result(res, code.success, msg.success, result);
         })
@@ -282,7 +274,7 @@ exports.updateEventById = function (req, res) {
         if (!event)
             return utils.result(res, code.notFound, msg.eventNotFound, null);
         if (err)
-            return utils.result(res, code.serverError, msg.serverError, err);
+            return utils.result(res, code.serverError, msg.serverError, err.message);
         return utils.result(res, code.success, msg.success, event);
     });
 };
@@ -292,7 +284,7 @@ exports.deleteEvent = function (req, res) {
         _id: req.params.eventId
     }, function (err, eventExist) {
         if (err) {
-            return utils.result(res, code.serverError, msg.serverError, err);
+            return utils.result(res, code.serverError, msg.serverError, err.message);
         }
         if (eventExist) {
             Event.remove({
@@ -302,7 +294,7 @@ exports.deleteEvent = function (req, res) {
                     return utils.result(res, code.notFound, msg.eventNotFound, null);
                 }
                 if (err) {
-                    return utils.result(res, code.serverError, msg.serverError, err);
+                    return utils.result(res, code.serverError, msg.serverError, err.message);
                 }
                 if (deleted) {
                     return utils.result(res, code.success, msg.success, null);
@@ -314,6 +306,7 @@ exports.deleteEvent = function (req, res) {
         }
     });
 };
+
 exports.upvote = function (req, res) {
     var body = req.body;
     if (!body.userId) {
@@ -326,7 +319,7 @@ exports.upvote = function (req, res) {
         function (err, eventPoint) {
             if (err) {
                 console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             }
             if (!eventPoint) {
                 return utils.result(res, code.notFound, msg.eventNotFound, null);
@@ -340,10 +333,10 @@ exports.upvote = function (req, res) {
                 eventPoint.save(function (err, newEventPoint) {
                     if (err) {
                         console.log(err);
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     }
                     if (updateUserPoint(-1, newEventPoint.event_id) === false) //decrease user point by 1
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     return utils.result(res, code.success, msg.success, newEventPoint);
                 });
             }
@@ -364,10 +357,10 @@ exports.upvote = function (req, res) {
                 eventPoint.save(function (err, newEventPoint) {
                     if (err) {
                         console.log(err);
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     }
                     if (updateUserPoint(userPointToUpdate, newEventPoint.event_id) === false)
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     return utils.result(res, code.success, msg.success, newEventPoint);
                 });
             }
@@ -387,7 +380,7 @@ exports.downvote = function (req, res) {
         function (err, eventPoint) {
             if (err) {
                 console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, err);
+                return utils.result(res, code.serverError, msg.serverError, err.message);
             }
             if (!eventPoint) {
                 return utils.result(res, code.notFound, msg.eventNotFound, null);
@@ -401,10 +394,10 @@ exports.downvote = function (req, res) {
                 eventPoint.save(function (err, newEventPoint) {
                     if (err) {
                         console.log(err);
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     }
                     if (updateUserPoint(1, newEventPoint.event_id) === false) //increase userPoint by 1
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     return utils.result(res, code.success, msg.success, newEventPoint);
                 });
             }
@@ -425,10 +418,10 @@ exports.downvote = function (req, res) {
                 eventPoint.save(function (err, newEventPoint) {
                     if (err) {
                         console.log(err);
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     }
                     if (updateUserPoint(userPointToUpdate, newEventPoint.event_id) === false)
-                        return utils.result(res, code.serverError, msg.serverError, err);
+                        return utils.result(res, code.serverError, msg.serverError, err.message);
                     return utils.result(res, code.success, msg.success, newEventPoint);
                 });
             }
