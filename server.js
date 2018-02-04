@@ -11,7 +11,7 @@ var routes = require('./api/Routes.js');
 
 //Schemas registration
 var UserModel = require('./api/User/UserModel.js'),
-    TrafficEvent  = require('./api/TrafficEvent/Main/TrafficEventModel.js'),
+    TrafficEvent = require('./api/TrafficEvent/Main/TrafficEventModel.js'),
     GPSData = require('./api/GPSData/GPSDataModel.js'),
     TrafficEventPoint = require('./api/TrafficEvent/Main/Points/TrafficEventPointModel.js'),
     PointByMonth = require('./api/User/Points/PointModel.js')
@@ -20,7 +20,7 @@ var UserModel = require('./api/User/UserModel.js'),
 var configDB = require('./config/BananaConst.js');
 var jwt = require('jsonwebtoken');
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.set('bananaMinion', configDB.secret); // secret variable
 

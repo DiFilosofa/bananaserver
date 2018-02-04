@@ -4,101 +4,101 @@ var Schema = mongoose.Schema;
 var ttl = require('mongoose-ttl');
 
 var trafficEventSchema = new Schema({
-    userId:{
+    userId: {
         type: String,
-        required:true
+        required: true
     },
-    name:{
-        type:String,
-        required:true
+    name: {
+        type: String,
+        required: true
     },
-    created_at:{
-        type:Date,
+    created_at: {
+        type: Date,
         default: Date.now
     },
-    updated_at:{
-        type:Date,
+    updated_at: {
+        type: Date,
         default: Date.now
     },
-    eventType:{
-        type:Number,
-        default:0,
-        min:0,
-        max:3
+    eventType: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 3
     },
-    latitude:{
-        type:Number,
-        required:true
+    latitude: {
+        type: Number,
+        required: true
     },
-    longitude:{
-        type:Number,
-        required:true
+    longitude: {
+        type: Number,
+        required: true
     },
-    end_latitude:{
-        type:Number,
-        required:true
+    end_latitude: {
+        type: Number,
+        required: true
     },
-    end_longitude:{
-        type:Number,
-        required:true
+    end_longitude: {
+        type: Number,
+        required: true
     },
     note: {
         type: String
     },
-    density:{
-        type:Number,
-        default:3,
-        min:0,
-        max:4
+    density: {
+        type: Number,
+        default: 3,
+        min: 0,
+        max: 4
     },
-    motorbike_speed:{
-        type:Number,
-        default:1,
-        min:0,
-        max:3
+    motorbike_speed: {
+        type: Number,
+        default: 1,
+        min: 0,
+        max: 3
     },
-    car_speed:{
-        type:Number,
-        default:1,
-        min:0,
-        max:3
+    car_speed: {
+        type: Number,
+        default: 1,
+        min: 0,
+        max: 3
     },
-    has_rain:{
-        type:Boolean,
-        default:false
+    has_rain: {
+        type: Boolean,
+        default: false
     },
-    has_accident:{
-        type:Boolean,
-        default:false
+    has_accident: {
+        type: Boolean,
+        default: false
     },
-    should_travel:{
-        type:Boolean,
-        default:false
+    should_travel: {
+        type: Boolean,
+        default: false
     },
-    has_flood:{
-        type:Boolean,
-        default:false
+    has_flood: {
+        type: Boolean,
+        default: false
     },
-    district:{
-        type:Number,
-        min:0,
-        max:24,
-        default:0
+    district: {
+        type: Number,
+        min: 0,
+        max: 24,
+        default: 0
     },
-    Point:{
-        type:Schema.ObjectId,
-        ref:'TrafficEventPoint'
+    Point: {
+        type: Schema.ObjectId,
+        ref: 'TrafficEventPoint'
     },
-    isUpvoted:{
-        type:Boolean
+    isUpvoted: {
+        type: Boolean
     },
-    isDownvoted:{
-        type:Boolean
+    isDownvoted: {
+        type: Boolean
     },
-    mediaDatas:[{
-        type:String
+    mediaDatas: [{
+        type: String
     }]
 });
-trafficEventSchema.plugin(ttl,{ttl:60000});
-var EventModel = mongoose.model('TrafficEvent',trafficEventSchema);
+trafficEventSchema.plugin(ttl, {ttl: 60000});
+var EventModel = mongoose.model('TrafficEvent', trafficEventSchema);
 module.exports = EventModel;
