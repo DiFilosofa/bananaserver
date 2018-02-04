@@ -15,39 +15,43 @@ var userSchema = new Schema({
         type: String,
         required: true
     },
-    nickname:{
-        type:String,
-        default:""
-    },
-    address:{
+    nickname: {
         type: String,
-        default:""
+        default: ""
     },
-    phone:{
+    address: {
         type: String,
-        default:""
+        default: ""
     },
-    level:{
+    phone: {
+        type: String,
+        default: ""
+    },
+    level: {
         type: Number,
-        default:0,
-        min:-2,
-        max:5
+        default: 0,
+        min: -2,
+        max: 5
     },
-    created_at:{
-        type:Date,
+    avatar: {
+        type: String,
+        default: ""
+    },
+    created_at: {
+        type: Date,
         default: Date.now
     },
-    point_sum:{
-        type:Number,
+    point_sum: {
+        type: Number,
         default: 0
     },
-    UserPoints:[{
-        type:Schema.ObjectId,
-        ref:'PointByMonth'
+    UserPoints: [{
+        type: Schema.ObjectId,
+        ref: 'PointByMonth'
     }],
-    queryTimePoints:{
-        type:Number,
-        default:0
+    queryTimePoints: {
+        type: Number,
+        default: 0
     }
 
 });
