@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 var mongoose = require('mongoose'),
     code = require('../../../Data/Code.js'),
     msg = require('../../../Data/Message.js'),
@@ -12,7 +12,6 @@ var mongoose = require('mongoose'),
     ttl = require('mongoose-ttl'),
     util = require("util"),
     formidable = require('formidable'),
-    AWS = require('aws-sdk'),
     async = require('async'),
     fs = require('fs'),
     path = require('path')
@@ -20,11 +19,23 @@ var mongoose = require('mongoose'),
 
 var imageData, imageName;
 
-const s3 = new AWS.S3({
-    accessKeyId: aws_s3.accessKeyId,
-    secretAccessKey: aws_s3.secretKey,
-    region: aws_s3.region
-});
+const createItemObject = function (callback) {
+    const params = {
+        Bucket: aws_s3.bucketName,
+        Key: imageName,
+        ACL: 'public-read',
+        Body: imageData
+    };
+    aws_s3.s3.putObject(params, function (err, data) {
+        if (err) {
+            console.log("Error uploading image: ", err);
+            callback(err, null)
+        } else {
+            console.log("Successfully uploaded image on S3", data);
+            callback(null, data)
+        }
+    })
+};
 
 exports.createEvent = function (req, res) {
     var body = req.body;
@@ -120,25 +131,6 @@ exports.createEvent = function (req, res) {
     });
 };
 
-
-const createItemObject = function (callback) {
-    const params = {
-        Bucket: aws_s3.bucketName,
-        Key: imageName,
-        ACL: 'public-read',
-        Body: imageData
-    };
-    s3.putObject(params, function (err, data) {
-        if (err) {
-            console.log("Error uploading image: ", err);
-            callback(err, null)
-        } else {
-            console.log("Successfully uploaded image on S3", data);
-            callback(null, data)
-        }
-    })
-};
-
 exports.updateEventPhotos = function (req, res) {
     var eventId = req.params.eventId;
     if (!eventId) {
@@ -183,7 +175,7 @@ exports.updateEventPhotos = function (req, res) {
                 /* Temporary location of our uploaded file */
                 var tmp_path = image.path;
                 /* The file name of the uploaded file */
-                imageName = eventId + "_img_" + image.name;
+                imageName = eventId + "_event_img_" + image.name;
 
                 fs.readFile(tmp_path, function (err, data) {
                     if (err) {

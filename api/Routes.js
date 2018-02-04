@@ -50,6 +50,7 @@ module.exports = function (app) {
     apiRoutes.put('/user/password/:userId', users.updatePassword);
     apiRoutes.get('/user/:userId', users.getUserById);
     apiRoutes.put('/user/:userId', users.updateById);
+    apiRoutes.put('/user/avatar/:userId', users.updateUserAvatarById);
     apiRoutes.delete('/user/:userId', users.deleteUserById);
 
     apiRoutes.post('/events', events.createEvent);
