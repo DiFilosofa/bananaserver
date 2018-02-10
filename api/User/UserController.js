@@ -230,16 +230,10 @@ exports.updateUserAvatarById = function (req, res) {
                     })
                 });
                 var url = aws_s3.dataUrlInitial + imageName;
-
-                user.update(
-                    {avatar: url},
-                    {new: true},
-                    function (err) {
-                        if (err) {
-                            return utils.result(res, code.serverError, msg.serverError, null);
-                        }
-                        return utils.result(res, code.success, msg.success, user);
-                    });
+                user.avatar = url;
+                user.save();
+                
+                return utils.result(res, code.success, msg.success, user);
             });
         });
 
