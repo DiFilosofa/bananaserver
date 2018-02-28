@@ -193,6 +193,26 @@ exports.updateEventPhotos = function (req, res) {
                     })
                 });
                 var url = aws_s3.dataUrlInitial + imageName;
+                var expiredTime = 0;
+                switch (event.density) {
+                    case 0:
+                        expiredTime = '5m'; //minute
+                        break;
+                    case 1:
+                        expiredTime = '15m'; //minute
+                        break;
+                    case 2:
+                        expiredTime = '25m'; //minue
+                        break;
+                    case 3:
+                        expiredTime = '35m';
+                        break;
+                    case 4:
+                        expiredTime = '45m';
+                        break;
+                }
+
+                event.ttl = expiredTime;
                 ///update media datas
                 event.mediaDatas.push(url);
                 event.save();
@@ -254,7 +274,7 @@ exports.getEventById = function (req, res) {
 
 exports.updateEventById = function (req, res) {
     var body = req.body;
-    if (req.body._id) {
+    if (req.body.userId) {
         return utils.result(res, code.badRequest, msg.noUpdateUserId, null);
     }
     if (body.eventType && (body.eventType > 4 || body.eventType < 0)) {

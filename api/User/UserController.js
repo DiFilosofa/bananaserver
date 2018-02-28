@@ -65,8 +65,9 @@ exports.createUser = function (req, res) {
     if (!body.confirmPassword) {
         return utils.result(res, code.badRequest, msg.noConfirmPassword, null)
     }
-    if (body.password !== body.confirmPassword)
-        return utils.result(res, code.badRequest, msg.passwordNotMatch, null)
+    if (body.password !== body.confirmPassword) {
+        return utils.result(res, code.badRequest, msg.passwordNotMatch, null);
+    }
     var newUser = new User(body);
     User.findOne(
         {
@@ -232,7 +233,7 @@ exports.updateUserAvatarById = function (req, res) {
                 var url = aws_s3.dataUrlInitial + imageName;
                 user.avatar = url;
                 user.save();
-                
+
                 return utils.result(res, code.success, msg.success, user);
             });
         });
