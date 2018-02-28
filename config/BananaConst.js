@@ -1,6 +1,6 @@
 // config/database.js
 module.exports = {
-    'url': 'mongodb://banana_admin:mrtiken@ds147864.mlab.com:47864/bananaserver',
+    'url': 'mongodb://banana_admin:mrtiken@ds139436.mlab.com:39436/bananaserver',
     'secret': 'minionAndGru'
 };
 
