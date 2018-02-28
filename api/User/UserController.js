@@ -131,7 +131,7 @@ exports.getUserById = function (req, res) {
         })
         .populate('UserPoints')
         .exec(function (err, result) {
-            if (!userExist) {
+            if (!result) {
                 return utils.result(res, code.notFound, msg.userNotFound, null);
             }
             if (err) {
