@@ -113,9 +113,7 @@ exports.createUser = function (req, res) {
                             )
                         }
                     });
-
                 });
-
             }
         }
     );
@@ -130,17 +128,12 @@ exports.getUserById = function (req, res) {
             password: 0,
             confirmPassword: 0,
             queryTimePoints: 0
-        }
-        , function (err, userExist) {
+        })
+        .populate('UserPoints')
+        .exec(function (err, result) {
             if (!userExist) {
                 return utils.result(res, code.notFound, msg.userNotFound, null);
             }
-            if (err) {
-                console.log(err);
-                return utils.result(res, code.serverError, msg.serverError, null)
-            }
-        }).populate('UserPoints')
-        .exec(function (err, result) {
             if (err) {
                 console.log(err);
                 return utils.result(res, code.serverError, msg.serverError, null)
