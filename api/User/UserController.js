@@ -91,29 +91,31 @@ exports.createUser = function (req, res) {
                         console.log(err);
                         return utils.result(res, code.serverError, msg.serverError, null)
                     }
+                    newUser.UserPoints.push(point);
+                    newUser.save(function (err, user) {
+                        if (err) {
+                            console.log(err);
+                            return utils.result(res, code.serverError, msg.serverError, null)
+                        }
+                        else {
+                            return utils.result(res, code.success, msg.accountCreated,
+                                {
+                                    _id: user._id,
+                                    email: user.email,
+                                    UserPoints: user.UserPoints,
+                                    point_sum: user.point_sum,
+                                    created_at: user.created_at,
+                                    level: user.level,
+                                    phone: user.phone,
+                                    address: user.address,
+                                    nickname: user.nickname
+                                }
+                            )
+                        }
+                    });
+
                 });
-                newUser.UserPoints.push(point);
-                newUser.save(function (err, user) {
-                    if (err) {
-                        console.log(err);
-                        return utils.result(res, code.serverError, msg.serverError, null)
-                    }
-                    else {
-                        return utils.result(res, code.success, msg.accountCreated,
-                            {
-                                _id: user._id,
-                                email: user.email,
-                                UserPoints: user.UserPoints,
-                                point_sum: user.point_sum,
-                                created_at: user.created_at,
-                                level: user.level,
-                                phone: user.phone,
-                                address: user.address,
-                                nickname: user.nickname
-                            }
-                        )
-                    }
-                });
+
             }
         }
     );
