@@ -155,7 +155,8 @@ exports.updateById = function (req, res) {
             nickname: user.nickname,
             address: user.address,
             phone: user.phone,
-            created_at: user.created_at
+            created_at: user.created_at,
+            avatar: user.avatar
         }));
     });
 };
