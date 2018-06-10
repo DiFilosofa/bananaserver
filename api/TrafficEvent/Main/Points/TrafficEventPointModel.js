@@ -3,6 +3,10 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var trafficPointsSchema = new Schema({
+    userId: {
+        type: String,
+        required: true
+    },
     event_id: {
         type: Schema.ObjectId,
         ref: 'TrafficEvent'
@@ -11,19 +15,17 @@ var trafficPointsSchema = new Schema({
         type: Boolean,
         default: false
     },
-    upvotes: {
+    points: {
+        type: Number,
+        default: 0.01
+    },
+    scoreSum: {
         type: Number,
         default: 0
     },
-    downvotes: {
-        type: Number,
-        default: 0
-    },
-    UpvoteUsers: [{
-        type: Schema.ObjectId
-    }],
-    DownvoteUsers: [{
-        type: Schema.ObjectId
+    Voted:[{
+        type:Schema.ObjectId,
+        ref: 'EventFeedback'
     }]
 });
 var EventPoint = mongoose.model('TrafficEventPoint', trafficPointsSchema);
