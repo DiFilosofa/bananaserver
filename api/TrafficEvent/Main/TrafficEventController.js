@@ -73,11 +73,8 @@ exports.createEvent = function (req, res) {
     if (body.next_density && (body.next_density < 0 || body.next_density > 2)) {
         return utils.result(res, code.badRequest, msg.invalidNextDensity, null);
     }
-    if (body.motorbike_speed && (body.motorbike_speed < 0 || body.motorbike_speed > 3)) {
-        return utils.result(res, code.badRequest, msg.invalidMotorbikeSpeed, null);
-    }
-    if (body.car_speed && (body.car_speed < 0 || body.car_speed > 3)) {
-        return utils.result(res, code.badRequest, msg.invalidCarSpeed, null);
+    if (body.speed && (body.speed < 0 || body.speed > 3)) {
+        return utils.result(res, code.badRequest, msg.invalidSpeed, null);
     }
     // var expiredTime = 0;
     // switch (body.density) {
@@ -300,11 +297,8 @@ exports.updateEventById = function (req, res) {
     if (body.density && (body.density < 0 || body.density > 4)) {
         return utils.result(res, code.badRequest, msg.invalidDensity, null);
     }
-    if (body.motorbike_speed && (body.motorbike_speed < 0 || body.motorbike_speed > 3)) {
-        return utils.result(res, code.badRequest, msg.invalidMotorbikeSpeed, null);
-    }
-    if (body.car_speed && (body.car_speed < 0 || body.car_speed > 3)) {
-        return utils.result(res, code.badRequest, msg.invalidCarSpeed, null);
+    if (body.speed && (body.speed < 0 || body.speed > 3)) {
+        return utils.result(res, code.badRequest, msg.invalidSpeed, null);
     }
 
     Event.findByIdAndUpdate(req.params.eventId, body, {new: true}, function (err, event) {

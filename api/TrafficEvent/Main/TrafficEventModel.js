@@ -62,13 +62,7 @@ var trafficEventSchema = new Schema({
         type: Number,
         default: 0
     },
-    motorbike_speed: {
-        type: Number,
-        default: 1,
-        min: 0,
-        max: 3
-    },
-    car_speed: {
+    speed: {
         type: Number,
         default: 1,
         min: 0,
