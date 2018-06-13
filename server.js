@@ -10,11 +10,11 @@ var mongoClient = database.MongoClient;
 var routes = require('./api/Routes.js');
 
 //Schemas registration
-var EventFeedback = require('./api/TrafficEvent/Main/Feedback/FeedbackModel.js');
+var EventFeedback = require('./api/TrafficEvent/Feedback/FeedbackModel.js');
     UserModel = require('./api/User/UserModel.js'),
-    TrafficEvent = require('./api/TrafficEvent/Main/TrafficEventModel.js'),
+    TrafficEvent = require('./api/TrafficEvent/TrafficEventModel.js'),
     GPSData = require('./api/GPSData/GPSDataModel.js'),
-    TrafficEventPoint = require('./api/TrafficEvent/Main/Points/TrafficEventPointModel.js'),
+    TrafficEventPoint = require('./api/TrafficEvent/Points/TrafficEventPointModel.js'),
     PointByMonth = require('./api/User/Points/PointModel.js')
 ;
 

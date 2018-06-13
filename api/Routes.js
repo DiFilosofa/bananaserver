@@ -3,7 +3,7 @@ var express = require('express');
 var jwt = require('jsonwebtoken');
 module.exports = function (app) {
     var users = require('./User/UserController');
-    var events = require('./TrafficEvent/Main/TrafficEventController');
+    var events = require('./TrafficEvent/TrafficEventController');
     var apiRoutes = express.Router();
     apiRoutes.get('/', function (req, res) {
         res.send("Server is up and running")
