@@ -4,3 +4,7 @@ module.exports = {
     'secret': 'minionAndGru'
 };
 
+exports.reputationWeight = 0.8;
+exports.eventPointWeight = 0.2;
+exports.clusterDistance = 0.005;
+exports.clusterMinPoints = 1;

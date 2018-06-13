@@ -31,7 +31,9 @@
     "jsonwebtoken": "^8.1.0",
     "mongodb": "^2.2.31",
     "mongoose": "^4.11.14",
+    "mongoose-deep-populate": "^3.1.1",
     "mongoose-ttl": "0.0.3",
+    "npm": "^6.1.0",
     "password-hash": "^1.2.2",
     "util": "^0.10.3"
   }

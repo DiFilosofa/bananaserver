@@ -57,9 +57,7 @@ module.exports = function (app) {
     apiRoutes.put('/events/media/:eventId', events.updateEventPhotos);
     apiRoutes.put('/events/:eventId', events.updateEventById);
     apiRoutes.delete('/events/:eventId', events.deleteEvent);
-
-    apiRoutes.post('/events/upvote/:eventId', events.upvote);
-    apiRoutes.post('/events/downvote/:eventId', events.downvote);
+    apiRoutes.post('/events/upvote/:eventId',events.vote);
 
     app.use(apiRoutes);
 };

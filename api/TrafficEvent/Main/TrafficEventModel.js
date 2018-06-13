@@ -2,11 +2,12 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var ttl = require('mongoose-ttl');
+var deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 var trafficEventSchema = new Schema({
     userId: {
-        type: String,
-        required: true
+        type: Schema.ObjectId,
+        ref: 'User'
     },
     name: {
         type: String,
@@ -47,17 +48,21 @@ var trafficEventSchema = new Schema({
     },
     density: {
         type: Number,
-        default: 3,
+        default: 1,
         min: 0,
-        max: 4
+        max: 2
     },
-    motorbike_speed: {
+    next_density: {
         type: Number,
         default: 1,
         min: 0,
-        max: 3
+        max: 2
     },
-    car_speed: {
+    validity: {
+        type: Number,
+        default: 0
+    },
+    speed: {
         type: Number,
         default: 1,
         min: 0,
@@ -92,13 +97,18 @@ var trafficEventSchema = new Schema({
     isUpvoted: {
         type: Boolean
     },
-    isDownvoted: {
-        type: Boolean
+    votedScore:{
+        type:Number,
+        default: null
     },
+    // isDownvoted: {
+    //     type: Boolean
+    // },
     mediaDatas: [{
         type: String
     }]
 });
-trafficEventSchema.plugin(ttl, {ttl: 60000});
+// trafficEventSchema.plugin(ttl, {ttl: 60000});
+trafficEventSchema.plugin(deepPopulate);
 var EventModel = mongoose.model('TrafficEvent', trafficEventSchema);
 module.exports = EventModel;
