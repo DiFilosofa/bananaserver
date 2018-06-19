@@ -1,10 +1,10 @@
 "use strict";
 var mongoose = require('mongoose'),
-    code = require('../../../Data/Code.js'),
-    msg = require('../../../Data/Message.js'),
-    utils = require('../../../Utils/MainUtils.js'),
-    aws_s3 = require('../../../Data/AWSConstants'),
-    UserPointController = require('../../User/Points/PointController.js'),
+    code = require('../../Data/Code.js'),
+    msg = require('../../Data/Message.js'),
+    utils = require('../../Utils/MainUtils.js'),
+    aws_s3 = require('../../Data/AWSConstants'),
+    UserPointController = require('../User/Points/PointController.js'),
     Event = mongoose.model('TrafficEvent'),
     User = mongoose.model('User'),
     EventPoint = mongoose.model('TrafficEventPoint'),
@@ -127,10 +127,10 @@ exports.createEvent = function (req, res) {
                     {_id: event._id},
                     {Point: eventPoint._id},
                     {new: true},
-                    function (err) {
-                        if (err) {
-                            console.log(err);
-                            return utils.result(res, code.serverError, msg.serverError, err.message);
+                    function (error) {
+                        if (error) {
+                            console.log(error);
+                            return utils.result(res, code.serverError, msg.serverError, error);
                         }
                         return utils.result(res, code.success, msg.success, event);
                     }
@@ -351,7 +351,7 @@ exports.vote = function (req, res) {
         {
             _id: req.params.eventId
         }
-    ).populate('Point').exec(
+    ).deepPopulate('Point, userId').exec(
         function (err, event) {
             if (err) {
                 console.log(err);
@@ -366,7 +366,7 @@ exports.vote = function (req, res) {
             User.findOne(
                 {
                     _id: body.userId
-                }, function (err, user) {
+                }, function (err, user) { //find user who voted
                     if (!user) {
                         console.log(err);
                         return utils.result(res, code.badRequest, msg.userNotFound, null);
@@ -380,9 +380,9 @@ exports.vote = function (req, res) {
                         .exec(function (err, eventPoint) {
                             var isVotedArray = eventPoint.Voted.filter(voted =>
                                 voted.userId == body.userId
-                        );                            ;
-                            if (isVotedArray.length == 0) {
-                                var newFeedback = new Feedback({
+                            );
+                            if (isVotedArray.length == 0) { //if user hasn't voted for this event
+                                var newFeedback = new Feedback({ //create feedback from user
                                     userId: body.userId,
                                     score: body.score
                                 });
@@ -391,14 +391,15 @@ exports.vote = function (req, res) {
                                         console.log(err);
                                         return utils.result(res, code.serverError, msg.serverError, null);
                                     }
-                                    eventPoint.Voted.push(feedback);
-                                    eventPoint.scoreSum = eventPoint.scoreSum + body.score * user.reputation; //update score sum
+
+                                    eventPoint.Voted.push(feedback); //add new feedback to event
+                                    eventPoint.scoreSum = eventPoint.scoreSum + body.score * event.userId.reputation; //update score sum of event
                                     var numberOfVotes = eventPoint.Voted.length;
-                                    if (numberOfVotes < 2) {
-                                        eventPoint.save().then(
+                                    if (numberOfVotes < 3) { //if event's vote count < 3 => don't update point
+                                        eventPoint.save().then( //save event and event's point
                                             event.save().then(
                                                 Event.findOne({_id: req.params.eventId})
-                                                    .deepPopulate('Point userId')
+                                                    .deepPopulate('Point, userId, Voted')
                                                     .exec(function (err, result) {
                                                         if (err) {
                                                             console.log(err);
@@ -408,26 +409,39 @@ exports.vote = function (req, res) {
                                                     })
                                             )
                                         );
-                                    } else {
+                                    } else { //if event's vote count >= 3 -> update event's score sum
                                         eventPoint.points = eventPoint.scoreSum / numberOfVotes;
-                                        event.validity = user.reputation * eventPoint.points;
-                                        eventPoint.save().then(
-                                            event.save().then(
-                                                Event.findOne({_id: req.params.eventId})
-                                                    .deepPopulate('Point userId')
-                                                    .exec(function (err, result) {
-                                                        if (err) {
-                                                            console.log(err);
-                                                            return utils.result(res, code.serverError, msg.serverError, null);
-                                                        }
-                                                        return utils.result(res, code.success, msg.success, result);
-                                                    })
+                                        event.validity = user.reputation * eventPoint.points; //update event validity
+
+                                        //Update event's user reputation, 0.02 is a constant defined in the thesis paper.
+                                        event.userId.reputation = event.userId.reputation + (eventPoint.points - event.userId.reputation) * 0.02;
+
+                                        getMedian(res, event.Point._id, function (median) {
+                                            //update event's voter reputation
+                                            user.reputation = user.reputation + (1 - Math.abs(median - body.score) - user.reputation) * 0.02;
+
+                                            event.userId.save().then(
+                                                user.save().then(
+                                                    eventPoint.save().then(
+                                                        event.save().then(
+                                                            Event.findOne({_id: req.params.eventId})
+                                                                .deepPopulate('Point, userId, Point.Voted')
+                                                                .exec(function (err, result) {
+                                                                    if (err) {
+                                                                        console.log(err);
+                                                                        return utils.result(res, code.serverError, msg.serverError, null);
+                                                                    }
+                                                                    return utils.result(res, code.success, msg.success, result);
+                                                                })
+                                                        )
+                                                    )
+                                                )
                                             )
-                                        );
+                                        });
                                     }
                                 });
                             }
-                            else {
+                            else { //if user has voted before
                                 return utils.result(res, code.badRequest, msg.alreadyVoted, null);
                             }
                         });
@@ -440,13 +454,13 @@ exports.vote = function (req, res) {
 ///This function will fire after each period of time
 function updateUserValidity(res) {
     Event.find()
-        .deepPopulate('Point userId')
+        .deepPopulate('Point, userId')
         .exec(function (err, results) {
             if (err) {
                 console.log('err');
                 return utils.result(res, code.serverError, msg.serverError, null);
             }
-            results.forEach(function (element) {
+            results.forEach(function (element, index) {
                 User.findOne({
                     _id: element.userId
                 }, function (err, user) {
@@ -458,4 +472,38 @@ function updateUserValidity(res) {
                 })
             });
         })
+}
+
+function getMedian(res, eventPointId, callback) {
+    var pointArray = [];
+    EventPoint.findOne({_id: eventPointId})
+        .populate('Voted')
+        .exec(function (err, eventPoint) {
+            if (err) {
+                console.log('err');
+                return utils.result(res, code.serverError, msg.serverError, null);
+            }
+
+            var feedbackModelArray = eventPoint.Voted;
+
+            var size = feedbackModelArray.length;
+            for (var index = 0 ; index < size ; index ++){
+                pointArray.push(feedbackModelArray[index].score);
+                if (index == (size - 1)){
+                    pointArray.sort(function (a, b) {
+                        return a - b;
+                    });
+                    if (pointArray.length === 0) {
+                        callback(0);
+                    } else {
+                        var half = Math.floor(pointArray.length / 2);
+                        if (pointArray.length % 2) {
+                            callback(pointArray[half]);
+                        } else {
+                            callback((pointArray[half - 1] + pointArray[half]) / 2.0);
+                        }
+                    }
+                }
+            }
+        });
 }
