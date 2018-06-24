@@ -26,7 +26,10 @@ var clusterSchema = new Schema({
     },
     Events: [{
         type: Schema.ObjectId,
-        ref: 'LutEvent'
+        ref: 'TrafficEvent'
+    }],
+    UserId: [{
+        type: String
     }],
     highestValidity: {
         type: Number,
