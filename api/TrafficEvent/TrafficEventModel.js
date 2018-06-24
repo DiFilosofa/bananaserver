@@ -69,20 +69,26 @@ var trafficEventSchema = new Schema({
         max: 3
     },
     has_rain: {
-        type: Boolean,
-        default: false
+        type: Number,
+        default: 0,
+        min: -1,
+        max: 1
     },
     has_accident: {
-        type: Boolean,
-        default: false
+        type: Number,
+        default: 0,
+        min: -1,
+        max: 1
     },
     should_travel: {
         type: Boolean,
         default: false
     },
     has_flood: {
-        type: Boolean,
-        default: false
+        type: Number,
+        default: 0,
+        min: -1,
+        max: 1
     },
     district: {
         type: Number,
