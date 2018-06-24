@@ -9,13 +9,14 @@ var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     EventPoint = mongoose.model('TrafficEventPoint'),
     UserPoint = mongoose.model('PointByMonth'),
-    Feedback = mongoose.model('EventFeedback'),
     // ttl = require('mongoose-ttl'),
     util = require("util"),
     formidable = require('formidable'),
     async = require('async'),
     fs = require('fs'),
-    path = require('path')
+    path = require('path'),
+    Cluster = require('./Cluster/ClusterController.js'),
+    Feedback = mongoose.model('EventFeedback')
 ;
 
 var imageData, imageName;
@@ -132,7 +133,8 @@ exports.createEvent = function (req, res) {
                             console.log(error);
                             return utils.result(res, code.serverError, msg.serverError, error);
                         }
-                        return utils.result(res, code.success, msg.success, event);
+                        utils.result(res, code.success, msg.success, event);
+                        Cluster.cluster();
                     }
                 );
             });

@@ -4,6 +4,7 @@ var jwt = require('jsonwebtoken');
 module.exports = function (app) {
     var users = require('./User/UserController');
     var events = require('./TrafficEvent/TrafficEventController');
+    var cluster = require('./TrafficEvent/Cluster/ClusterController');
     var apiRoutes = express.Router();
     apiRoutes.get('/', function (req, res) {
         res.send("Server is up and running")
@@ -18,6 +19,7 @@ module.exports = function (app) {
     apiRoutes.get('/leaderboard', users.getLeaderboardAllTime);
     apiRoutes.get('/leaderboard/month/:time', users.getLeaderboardByMonth);
     apiRoutes.get('/leaderboard/year/:year', users.getLeaderboardByYear);
+    apiRoutes.get('/clustersAll/:userId', cluster.getAllCluster);
 
     apiRoutes.use(function (req, res, next) {
         // check header or url parameters or post parameters for token

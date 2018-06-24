@@ -10,14 +10,14 @@ var mongoClient = database.MongoClient;
 var routes = require('./api/Routes.js');
 
 //Schemas registration
-var EventFeedback = require('./api/TrafficEvent/Feedback/FeedbackModel.js'),
-    Cluster = require('./api/TrafficEvent/Cluster/ClusterModel.js'),
-    UserModel = require('./api/User/UserModel.js'),
-    TrafficEvent = require('./api/TrafficEvent/TrafficEventModel.js'),
-    GPSData = require('./api/TrafficEventLocation/TrafficEventLocationModel.js'),
-    TrafficEventPoint = require('./api/TrafficEvent/Points/TrafficEventPointModel.js'),
-    PointByMonth = require('./api/User/Points/PointModel.js')
-;
+var EventFeedback = require('./api/TrafficEvent/Feedback/FeedbackModel.js');
+    Cluster = require('./api/TrafficEvent/Cluster/ClusterModel.js');
+    UserModel = require('./api/User/UserModel.js');
+    TrafficEvent = require('./api/TrafficEvent/TrafficEventModel.js');
+    GPSData = require('./api/TrafficEventLocation/TrafficEventLocationModel.js');
+    TrafficEventPoint = require('./api/TrafficEvent/Points/TrafficEventPointModel.js');
+    PointByMonth = require('./api/User/Points/PointModel.js');
+    EventController = require('./api/TrafficEvent/TrafficEventController.js');
 
 var configDB = require('./config/BananaConst.js');
 var jwt = require('jsonwebtoken');
