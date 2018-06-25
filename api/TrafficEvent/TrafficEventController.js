@@ -72,10 +72,10 @@ exports.createEvent = function (req, res) {
     if (body.has_flood && (body.has_flood > 1 || body.has_flood < -1)) {
         return utils.result(res, code.badRequest, msg.invalidHasFloodValue, null);
     }
-    if (!body.density) {
+    if (typeof body.density === 'undefined' || body.density === null) {
         return utils.result(res, code.badRequest, msg.densityNotFound, null);
     }
-    if (!body.next_density) {
+    if (typeof body.next_density === 'undefined' || body.next_density === null) {
         return utils.result(res, code.badRequest, msg.nextDensityNotFound, null);
     }
     if (body.density && (body.density < 0 || body.density > 2)) {
