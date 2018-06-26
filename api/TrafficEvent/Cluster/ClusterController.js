@@ -17,6 +17,7 @@ const reputationWeight = 0.8;
 const scoreWeight = 0.2;
 
 exports.getAllCluster = function (req, res) {
+    console.log("in")
     var userId = req.params.userId;
     if (!userId) {
         return utils.result(res, code.badRequest, msg.noUserId, null);
@@ -28,8 +29,10 @@ exports.getAllCluster = function (req, res) {
                     console.log(err);
                     return utils.result(res, code.serverError, msg.serverError, null);
                 }
+
                 if (parseInt(userId) !== -1) {
                     clusters.forEach(function (cluster, clusterIndex, arr) {
+                        console.log(clusterIndex);
                         var tempEventList = cluster.Events;
                         tempEventList.forEach(function (tempEvent, eventIndex, arr) {
                             var isVotedArray = tempEvent.Point.Voted.filter( voted =>
@@ -162,46 +165,58 @@ function calculateClusterMaxDistance() {
                 var beginLng = 0.0;
                 var endLat = 0.0;
                 var endLng = 0.0;
-
-                asyncForEach(eventArray, function (event, eventIndex, eventArr) {
-                    var done = this.async();
-                    var beginTempLat = event.latitude;
-                    var beginTempLng = event.longitude;
-                    console.log("out "+beginTempLat + "," + beginTempLng);
-                    asyncForEach(eventArray, function (endEvent, endIndex, endArr) {
-                        var innerDone = this.async();
-                        var endTempLat = endEvent.end_latitude;
-                        var endTempLng = endEvent.end_longitude;
-                        console.log("in "+endTempLat + "," + endTempLng);
-
-                        var distance = calculateDistance(beginTempLat, beginTempLng, endTempLat, endTempLng)
-                        console.log(distance + "---" +maxDistance);
-                        if (distance > maxDistance){
-                            maxDistance = distance;
-                            beginLat = beginTempLat;
-                            beginLng = beginTempLng;
-                            endLat = endTempLat;
-                            endLng = endTempLng;
+                if (eventArray.length == 1){
+                    cluster.begin_lat = eventArray[0].latitude;
+                    cluster.begin_lng = eventArray[0].longitude;
+                    cluster.end_lat = eventArray[0].end_latitude;
+                    cluster.end_lng = eventArray[0].end_longitude;
+                    cluster.save(function (err, result) {
+                        if(err) {
+                            console.log(err)
                         }
-                        innerDone();
-                        if(endIndex == endArr.length - 1 && eventIndex != eventArr.length) {
-                            done()
-                        }
-                    });
-                    if (index == arr.length - 1) {
-                        cluster.begin_lat = beginLat;
-                        cluster.begin_lng = beginLng;
-                        cluster.end_lat = endLat;
-                        cluster.end_lng = endLng;
-                        cluster.save(function (err, result) {
-                            if(err) {
-                                console.log(err)
+                        console.log("success");
+                    })
+                } else {
+                    asyncForEach(eventArray, function (event, eventIndex, eventArr) {
+                        var done = this.async();
+                        var beginTempLat = event.latitude;
+                        var beginTempLng = event.longitude;
+                        // console.log("out "+beginTempLat + "," + beginTempLng);
+                        asyncForEach(eventArray, function (endEvent, endIndex, endArr) {
+                            var innerDone = this.async();
+                            var endTempLat = endEvent.end_latitude;
+                            var endTempLng = endEvent.end_longitude;
+                            // console.log("in "+endTempLat + "," + endTempLng);
+
+                            var distance = calculateDistance(beginTempLat, beginTempLng, endTempLat, endTempLng);
+                            // console.log(distance + "---" +maxDistance);
+                            if (distance > maxDistance){
+                                maxDistance = distance;
+                                beginLat = beginTempLat;
+                                beginLng = beginTempLng;
+                                endLat = endTempLat;
+                                endLng = endTempLng;
                             }
-                            console.log("success");
-                            done()
-                        })
-                    }
-                })
+                            innerDone();
+                            if(endIndex == endArr.length - 1 && eventIndex != eventArr.length) {
+                                done()
+                            }
+                        });
+                        if (index == arr.length - 1) {
+                            cluster.begin_lat = beginLat;
+                            cluster.begin_lng = beginLng;
+                            cluster.end_lat = endLat;
+                            cluster.end_lng = endLng;
+                            cluster.save(function (err, result) {
+                                if(err) {
+                                    console.log(err)
+                                }
+                                console.log("success");
+                                done()
+                            })
+                        }
+                    })
+                }
             })
         });
 }
