@@ -34,7 +34,20 @@ var clusterSchema = new Schema({
     highestValidity: {
         type: Number,
         default: 0.0001
+    },
+    begin_lat: {
+        type: Number
+    },
+    begin_lng: {
+        type: Number
+    },
+    end_lat: {
+        type: Number
+    },
+    end_lng: {
+        type: Number
     }
+
 });
 clusterSchema.plugin(deepPopulate);
 var ClusterModel = mongoose.model("ClusterModel", clusterSchema);
