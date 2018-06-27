@@ -17,7 +17,6 @@ const reputationWeight = 0.8;
 const scoreWeight = 0.2;
 
 exports.getAllCluster = function (req, res) {
-    console.log("in");
     var userId = req.params.userId;
     if (!userId) {
         return utils.result(res, code.badRequest, msg.noUserId, null);
@@ -32,7 +31,6 @@ exports.getAllCluster = function (req, res) {
 
                 if (parseInt(userId) !== -1) {
                     clusters.forEach(function (cluster, clusterIndex, arr) {
-                        console.log(clusterIndex);
                         var tempEventList = cluster.Events;
                         tempEventList.forEach(function (tempEvent, eventIndex, arr) {
                             var isVotedArray = tempEvent.Point.Voted.filter( voted =>
@@ -113,6 +111,9 @@ function updateClusters(clustersList, hashMap) {
                                 // setInterval(function () {
                                 //     endOfPeriod()
                                 // }, period);
+                                if (index == size - 1) {
+                                    calculateClusterMaxDistance()
+                                }
                                 done();
                             });
                         }
@@ -137,14 +138,14 @@ function updateClusters(clustersList, hashMap) {
                                 // setInterval(function () {
                                 //     endOfPeriod()
                                 // }, period);
+                                if (index == size - 1) {
+                                    calculateClusterMaxDistance()
+                                }
                                 done();
                             });
                         }
                     }
                 );
-                if (index == size - 1) {
-                    calculateClusterMaxDistance()
-                }
             });
         }
     );
@@ -159,7 +160,7 @@ function calculateClusterMaxDistance() {
                 return utils.result(res, code.serverError, msg.serverError, null);
             }
             asyncForEach(clusters, function (cluster, index, arr) {
-                var donee = this.async();
+                var done = this.async();
                 var eventArray = cluster.Events;
                 var maxDistance = 0;
                 var beginLat = 0.0;
@@ -167,7 +168,7 @@ function calculateClusterMaxDistance() {
                 var endLat = 0.0;
                 var endLng = 0.0;
                 if (eventArray.length == 1){
-                    console.log("top");
+                    console.log("cluster_" + index);
                     cluster.begin_lat = eventArray[0].latitude;
                     cluster.begin_lng = eventArray[0].longitude;
                     cluster.end_lat = eventArray[0].end_latitude;
@@ -176,19 +177,16 @@ function calculateClusterMaxDistance() {
                         if(err) {
                             console.log(err)
                         }
-                        console.log("success up");
-                        donee();
+                        console.log(result);
+                        done();
                     })
                 } else {
-                    console.log("bot");
+                    console.log("cluster_" + index);
                     eventArray.forEach(function (event, eventIndex, eventArr) {
-                        console.log("bot--1");
-
                         var beginTempLat = event.latitude;
                         var beginTempLng = event.longitude;
 
                         eventArray.forEach(function (endEvent, endIndex, endArr) {
-                            console.log("bot--2");
 
                             var endTempLat = endEvent.end_latitude;
                             var endTempLng = endEvent.end_longitude;
@@ -202,9 +200,6 @@ function calculateClusterMaxDistance() {
                                 endLat = endTempLat;
                                 endLng = endTempLng;
                             }
-                            console.log("bot--2 checking index")
-                            console.log("bot--2 " + endIndex + "-" + endArr.length + "-" + eventIndex + "-" + eventArr.length - 1);
-
                             if (endIndex == endArr.length - 1 && eventIndex == eventArr.length - 1) {
                                 cluster.begin_lat = beginLat;
                                 cluster.begin_lng = beginLng;
@@ -215,14 +210,11 @@ function calculateClusterMaxDistance() {
                                         console.log(err)
                                     }
                                     console.log("success bot");
-                                    donee();
+                                    done();
                                 })
                             }
                         });
                     })
-                }
-                if(index == arr.length - 1) {
-                    console.log("doneeeeee")
                 }
             })
         });
